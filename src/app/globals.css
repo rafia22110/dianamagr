@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #eec158;
+  --primary-light: #cdbc3f;
+  --primary-dark: #2c1810;
+  --bg-creme: #f9f7f4;
+  --text-main: #333;
+}
+
+body {
+  font-family: 'Heebo', sans-serif;
+  background-color: var(--bg-creme);
+  color: var(--text-main);
+  direction: rtl;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, rgba(139, 69, 19, 0.9) 0%, rgba(205, 133, 63, 0.85) 100%);
+}
+
+.wave-pattern {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  transform: rotate(180deg);
+}
