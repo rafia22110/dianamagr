@@ -1,47 +1,98 @@
 import React from "react";
+import { insforge } from "@/lib/insforge";
 
-const podcasts = [
+// Fallback links if DB is empty or unavailable
+const FALLBACK_LINKS = [
   {
+    id: "1",
     title: "פרק 47 בפודקאסט - לחיות בתפקיד הראשי",
     description: "עם יעלי קוגן - פרק מיוחד על הטיול המסוכן מטהרן לישראל, אהבה, אמונה וחוויות המטבח הפרסי.",
-    link: "https://creators.spotify.com/pod/show/koganyaeli/episodes/47-e2sd48n",
+    url: "https://creators.spotify.com/pod/show/koganyaeli/episodes/47-e2sd48n",
     icon: "https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg",
-    type: "Spotify"
+    type: "Spotify",
+    display_order: 1,
   },
   {
+    id: "2",
     title: "ראיון בהידברות - נתנו לנו מכות רצח",
     description: "ראיון רציני על מסע רוחני, סבל פיזי והבריחה מטהרן. סיפור אישי ומרגש על אמונה והישרדות.",
-    link: "https://www.hidabroot.org/video/224331",
+    url: "https://www.hidabroot.org/video/224331",
     icon: "https://www.hidabroot.org/images/logo_og.png",
-    type: "Video"
+    type: "Video",
+    display_order: 2,
   },
   {
+    id: "3",
     title: "דוקותיים – כאן דיגיטל",
     description: "דיאנה מספרת על בריחת היהודים, והזיקה העמוקה בין המטבח הפרסי למקורות התרבות שלה.",
-    link: "https://www.youtube.com/watch?v=fOxlMPdyIo4",
+    url: "https://www.youtube.com/watch?v=fOxlMPdyIo4",
     icon: "https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg",
-    type: "YouTube"
-  }
+    type: "YouTube",
+    display_order: 3,
+  },
 ];
 
-export default function PodcastsSection() {
+type LinkRecord = {
+  id: string;
+  title: string;
+  description?: string;
+  url: string;
+  icon?: string;
+  type?: string;
+  display_order?: number;
+};
+
+async function fetchLinks(): Promise<LinkRecord[]> {
+  try {
+    const { data, error } = await insforge.database
+      .from("links")
+      .select("*")
+      .order("display_order", { ascending: true });
+
+    if (error || !data || data.length === 0) return FALLBACK_LINKS;
+    return data as LinkRecord[];
+  } catch {
+    return FALLBACK_LINKS;
+  }
+}
+
+export default async function PodcastsSection() {
+  const links = await fetchLinks();
+
   return (
     <section id="podcasts" className="py-20 px-6 bg-white">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-4xl text-center text-primary font-bold mb-4 font-serif">הסיפור שלי: ראיונות ופודקאסטים</h2>
-        <p className="text-center text-gray-600 mb-12 text-lg">שיחות מעמיקות על הבריחה, החיים באיראן והמטבח הפרסי</p>
-        
+        <h2 className="text-4xl text-center text-primary font-bold mb-4 font-serif">
+          הסיפור שלי: ראיונות ופודקאסטים
+        </h2>
+        <p className="text-center text-gray-600 mb-12 text-lg">
+          שיחות מעמיקות על הבריחה, החיים באיראן והמטבח הפרסי
+        </p>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {podcasts.map((item, index) => (
-            <div key={index} className="bg-creme-light border-r-4 border-primary-light p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between">
+          {links.map((item) => (
+            <div
+              key={item.id}
+              className="bg-[#f9f7f4] border-r-4 border-primary-light p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between"
+            >
               <div>
-                <img src={item.icon} alt={item.type} className="w-10 h-10 mb-4 opacity-80" />
-                <h3 className="text-2xl font-bold text-primary mb-4">{item.title}</h3>
-                <p className="text-gray-700 leading-relaxed mb-6">{item.description}</p>
+                {item.icon && (
+                  <img
+                    src={item.icon}
+                    alt={item.type || ""}
+                    className="w-10 h-10 mb-4 opacity-80"
+                  />
+                )}
+                <h3 className="text-2xl font-bold text-primary mb-4">
+                  {item.title}
+                </h3>
+                <p className="text-gray-700 leading-relaxed mb-6">
+                  {item.description}
+                </p>
               </div>
-              <a 
-                href={item.link} 
-                target="_blank" 
+              <a
+                href={item.url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center text-primary font-bold hover:underline"
               >

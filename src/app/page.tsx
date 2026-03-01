@@ -3,6 +3,7 @@ import { insforge } from "@/lib/insforge";
 import { ImageRecord } from "@/types/image";
 import GallerySection from "@/components/GallerySection";
 import PodcastsSection from "@/components/PodcastsSection";
+import NewsletterSection from "@/components/NewsletterSection";
 
 export default async function HomePage() {
   let heroImage: ImageRecord | null = null;
@@ -38,13 +39,14 @@ export default async function HomePage() {
           <li><Link href="#book" className="text-white font-bold hover:text-primary-light transition-colors">הספר</Link></li>
           <li><Link href="#podcasts" className="text-white font-bold hover:text-primary-light transition-colors">פודקאסטים</Link></li>
           <li><Link href="#gallery" className="text-white font-bold hover:text-primary-light transition-colors">גלריה</Link></li>
+          <li><Link href="#newsletter" className="text-white font-bold hover:text-primary-light transition-colors">הצטרפו</Link></li>
           <li><Link href="#lectures" className="text-white font-bold hover:text-primary-light transition-colors text-primary-light">הזמנת הרצאה</Link></li>
         </ul>
       </nav>
 
       <section id="home" className="relative h-[80vh] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden">
         {/* Hero Background with Overlay */}
-        <div 
+        <div
           className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
           style={{ backgroundImage: `url('${heroBg}')` }}
         >
@@ -62,12 +64,12 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="mt-10 flex gap-4 justify-center">
-             <Link href="#lectures" className="bg-primary-light hover:bg-white hover:text-primary text-white font-bold py-4 px-10 rounded-full shadow-xl transition-all transform hover:scale-105">
-               הזמנת הרצאה
-             </Link>
-             <Link href="#book" className="bg-white/20 hover:bg-white/30 text-white font-bold py-4 px-10 rounded-full border border-white/30 backdrop-blur-md transition-all">
-               על הספר
-             </Link>
+            <Link href="#lectures" className="bg-primary-light hover:bg-white hover:text-primary text-white font-bold py-4 px-10 rounded-full shadow-xl transition-all transform hover:scale-105">
+              הזמנת הרצאה
+            </Link>
+            <Link href="#book" className="bg-white/20 hover:bg-white/30 text-white font-bold py-4 px-10 rounded-full border border-white/30 backdrop-blur-md transition-all">
+              על הספר
+            </Link>
           </div>
         </div>
 
@@ -111,9 +113,9 @@ export default async function HomePage() {
             <div className="relative group">
               <div className="absolute inset-0 bg-primary-light rounded-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500 shadow-xl"></div>
               <div className="relative bg-white p-4 rounded-2xl shadow-2xl transform transition-transform duration-500 group-hover:-translate-y-2">
-                <img 
-                  src={bookCover?.url || "https://www.netbook.co.il/Files/Store/Items/15415/original.jpg"} 
-                  alt="הבריחה מטהרן" 
+                <img
+                  src={bookCover?.url || "https://www.netbook.co.il/Files/Store/Items/15415/original.jpg"}
+                  alt="הבריחה מטהרן"
                   className="w-full h-auto rounded-lg shadow-inner"
                 />
               </div>
@@ -142,45 +144,47 @@ export default async function HomePage() {
 
       <section id="lectures" className="py-24 px-6 bg-primary-dark text-white relative">
         <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-16">
-                <h2 className="text-5xl font-bold mb-4 font-serif">הזמנת הרצאות והופעות</h2>
-                <p className="text-xl text-primary-light opacity-90">הפרדוקס של נשים איראניות - מאב כפוי לחופש נשי</p>
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-bold mb-4 font-serif">הזמנת הרצאות והופעות</h2>
+            <p className="text-xl text-primary-light opacity-90">הפרדוקס של נשים איראניות - מאב כפוי לחופש נשי</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-white/5 p-12 rounded-3xl backdrop-blur-md border border-white/10">
+            <div className="space-y-6">
+              <h3 className="text-2xl font-bold text-primary-light underline decoration-2 underline-offset-8 mb-6">פרטי התקשרות</h3>
+              <p className="text-lg">מתאים למוסדות חינוך, ארגונים, אירועי נשים וקבוצות פרטיות.</p>
+              <div className="flex items-center gap-4 text-xl">
+                <span className="bg-primary-light p-3 rounded-full">📧</span>
+                <a href="mailto:Diana4420122@gmail.com" className="hover:underline">Diana4420122@gmail.com</a>
+              </div>
+              <div className="flex items-center gap-4 text-xl">
+                <span className="bg-primary-light p-3 rounded-full">📱</span>
+                <span>ניתן להשאיר פרטים ונחזור אליכם</span>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-white/5 p-12 rounded-3xl backdrop-blur-md border border-white/10">
-                <div className="space-y-6">
-                    <h3 className="text-2xl font-bold text-primary-light underline decoration-2 underline-offset-8 mb-6">פרטי התקשרות</h3>
-                    <p className="text-lg">מתאים למוסדות חינוך, ארגונים, אירועי נשים וקבוצות פרטיות.</p>
-                    <div className="flex items-center gap-4 text-xl">
-                        <span className="bg-primary-light p-3 rounded-full">📧</span>
-                        <a href="mailto:Diana4420122@gmail.com" className="hover:underline">Diana4420122@gmail.com</a>
-                    </div>
-                    <div className="flex items-center gap-4 text-xl">
-                        <span className="bg-primary-light p-3 rounded-full">📱</span>
-                        <span>ניתן להשאיר פרטים ונחזור אליכם</span>
-                    </div>
-                </div>
-                
-                <form className="space-y-4">
-                    <input type="text" placeholder="שם מלא" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
-                    <input type="email" placeholder="אימייל" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
-                    <input type="tel" placeholder="טלפון" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
-                    <textarea placeholder="סוג האירוע והודעה" rows={4} className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50"></textarea>
-                    <button type="submit" className="w-full bg-primary-light hover:bg-white hover:text-primary py-4 rounded-xl font-bold text-xl transition-all shadow-2xl">
-                        שלחי בקשה להזמנה
-                    </button>
-                </form>
-            </div>
+
+            <form className="space-y-4">
+              <input type="text" placeholder="שם מלא" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
+              <input type="email" placeholder="אימייל" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
+              <input type="tel" placeholder="טלפון" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
+              <textarea placeholder="סוג האירוע והודעה" rows={4} className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50"></textarea>
+              <button type="submit" className="w-full bg-primary-light hover:bg-white hover:text-primary py-4 rounded-xl font-bold text-xl transition-all shadow-2xl">
+                שלחי בקשה להזמנה
+              </button>
+            </form>
+          </div>
         </div>
       </section>
+
+      <NewsletterSection />
 
       <footer className="bg-black text-white py-16 px-6 text-center border-t border-white/10">
         <p className="text-3xl font-bold mb-6 font-serif tracking-widest text-primary-light">דיאנה רחמני</p>
         <p className="max-w-2xl mx-auto opacity-70 text-lg">כוכבת מאסטר שף | מחברת &quot;הבריחה מטהרן&quot; | מובילת המטבח הפרסי בישראל</p>
         <div className="flex justify-center gap-6 mt-10">
-            <a href="#" className="hover:text-primary-light transition-colors">FaceBook</a>
-            <a href="#" className="hover:text-primary-light transition-colors">Instagram</a>
-            <a href="#" className="hover:text-primary-light transition-colors">TikTok</a>
+          <a href="#" className="hover:text-primary-light transition-colors">FaceBook</a>
+          <a href="#" className="hover:text-primary-light transition-colors">Instagram</a>
+          <a href="#" className="hover:text-primary-light transition-colors">TikTok</a>
         </div>
         <p className="mt-12 opacity-40">© 2026 דיאנה רחמני. כל הזכויות שמורות.</p>
       </footer>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+
+<head>
+    <meta charset="UTF-8">
+    <title>InsForge Setup - Diana</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #e94560;
+        }
+
+        .step {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+            border-left: 4px solid #0f3460;
+        }
+
+        .step.success {
+            border-color: #22c55e;
+        }
+
+        .step.error {
+            border-color: #ef4444;
+        }
+
+        .step.running {
+            border-color: #f59e0b;
+        }
+
+        .step-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        pre {
+            background: #0d0d1a;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        button#runBtn {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        button#runBtn:hover {
+            background: #c73652;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-right: 8px;
+        }
+
+        .badge-ok {
+            background: #22c55e33;
+            color: #22c55e;
+        }
+
+        .badge-err {
+            background: #ef444433;
+            color: #ef4444;
+        }
+
+        .badge-run {
+            background: #f59e0b33;
+            color: #f59e0b;
+        }
+
+        #summary {
+            background: #0f3460;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+            display: none;
+        }
+
+        #summary h2 {
+            color: #22c55e;
+            margin: 0 0 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🚀 InsForge Setup - אתר דיאנה רחמני</h1>
+    <p>לחץ כדי ליצור את הטבלאות ו-Bucket הדרושים ל-InsForge</p>
+    <button id="runBtn" onclick="runAll()">▶ בצע הגדרה מלאה</button>
+
+    <div id="steps"></div>
+    <div id="summary"></div>
+
+    <script>
+        const API = 'https://ane7v4ce.us-east.insforge.app';
+        const KEY = 'ik_bf44df2031c6d8808e0d4cff27b52575';
+
+        // Default links to seed into the links table
+        const DEFAULT_LINKS = [
+            {
+                title: 'פרק 47 בפודקאסט - לחיות בתפקיד הראשי',
+                description: 'עם יעלי קוגן - פרק מיוחד על הטיול המסוכן מטהרן לישראל, אהבה, אמונה וחוויות המטבח הפרסי.',
+                url: 'https://creators.spotify.com/pod/show/koganyaeli/episodes/47-e2sd48n',
+                icon: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
+                type: 'Spotify',
+                display_order: 1
+            },
+            {
+                title: 'ראיון בהידברות - נתנו לנו מכות רצח',
+                description: 'ראיון רציני על מסע רוחני, סבל פיזי והבריחה מטהרן. סיפור אישי ומרגש על אמונה והישרדות.',
+                url: 'https://www.hidabroot.org/video/224331',
+                icon: 'https://www.hidabroot.org/images/logo_og.png',
+                type: 'Video',
+                display_order: 2
+            },
+            {
+                title: 'דוקותיים – כאן דיגיטל',
+                description: 'דיאנה מספרת על בריחת היהודים, והזיקה העמוקה בין המטבח הפרסי למקורות התרבות שלה.',
+                url: 'https://www.youtube.com/watch?v=fOxlMPdyIo4',
+                icon: 'https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg',
+                type: 'YouTube',
+                display_order: 3
+            }
+        ];
+
+        const headers = {
+            'Authorization': `Bearer ${KEY}`,
+            'Content-Type': 'application/json'
+        };
+
+        function log(stepId, status, title, detail) {
+            const el = document.getElementById(stepId);
+            el.className = `step ${status}`;
+            el.innerHTML = `
+    <div class="step-title">
+      <span class="badge badge-${status === 'success' ? 'ok' : status === 'error' ? 'err' : 'run'}">
+        ${status === 'success' ? '✅ הצלחה' : status === 'error' ? '❌ שגיאה' : '⏳ מבצע...'}
+      </span>
+      ${title}
+    </div>
+    <pre>${typeof detail === 'object' ? JSON.stringify(detail, null, 2) : detail}</pre>
+  `;
+        }
+
+        function addStep(id, title) {
+            const div = document.createElement('div');
+            div.className = 'step running';
+            div.id = id;
+            div.innerHTML = `<div class="step-title"><span class="badge badge-run">⏳ ממתין...</span>${title}</div>`;
+            document.getElementById('steps').appendChild(div);
+        }
+
+        async function runAll() {
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('runBtn').textContent = '⏳ מבצע...';
+            document.getElementById('steps').innerHTML = '';
+            document.getElementById('summary').style.display = 'none';
+
+            const results = {};
+
+            // --- Step 1: Check existing tables ---
+            addStep('s1', 'בדיקת טבלאות קיימות');
+            log('s1', 'running', 'בדיקת טבלאות קיימות', 'טוען...');
+            try {
+                const r = await fetch(`${API}/api/database/tables`, { headers });
+                const d = await r.json();
+                const hasImages = Array.isArray(d) ? d.some(t => (t.name || t) === 'images') : JSON.stringify(d).includes('images');
+                results.tablesExisting = d;
+                results.hasImages = hasImages;
+                log('s1', 'success', 'טבלאות קיימות', { status: r.status, tables: Array.isArray(d) ? d.map(t => t.name || t) : d, hasImages });
+            } catch (e) {
+                log('s1', 'error', 'בדיקת טבלאות - שגיאה', e.message);
+                results.hasImages = false;
+            }
+
+            // --- Step 2: Create images table ---
+            addStep('s2', 'יצירת טבלת images');
+            if (results.hasImages) {
+                log('s2', 'success', 'טבלת images', 'הטבלה כבר קיימת - מדלג ✅');
+            } else {
+                log('s2', 'running', 'יוצר טבלת images...', 'שולח בקשה...');
+                try {
+                    const r = await fetch(`${API}/api/database/tables`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            name: 'images',
+                            columns: [
+                                { name: 'id', type: 'uuid', primaryKey: true, defaultValue: 'gen_random_uuid()' },
+                                { name: 'filename', type: 'text', notNull: true },
+                                { name: 'original_name', type: 'text', notNull: true },
+                                { name: 'category', type: 'text', notNull: true, defaultValue: "'gallery'" },
+                                { name: 'tags', type: 'jsonb', defaultValue: "'[]'" },
+                                { name: 'alt_text', type: 'text' },
+                                { name: 'storage_path', type: 'text' },
+                                { name: 'url', type: 'text' },
+                                { name: 'upload_date', type: 'timestamptz', defaultValue: 'now()' }
+                            ]
+                        })
+                    });
+                    const d = await r.json();
+                    results.tableCreated = r.ok || r.status < 400;
+                    log('s2', r.ok || r.status < 400 ? 'success' : 'error', 'יצירת טבלת images', { status: r.status, response: d });
+                } catch (e) {
+                    log('s2', 'error', 'יצירת טבלה - שגיאה', e.message);
+                }
+            }
+
+            // --- Step 3: Check buckets ---
+            addStep('s3', 'בדיקת Storage Buckets קיימים');
+            log('s3', 'running', 'בדיקת buckets...', 'טוען...');
+            try {
+                const r = await fetch(`${API}/api/storage/buckets`, { headers });
+                const d = await r.json();
+                const hasBucket = Array.isArray(d) ? d.some(b => (b.name || b) === 'diana-images') : JSON.stringify(d).includes('diana-images');
+                results.bucketsExisting = d;
+                results.hasBucket = hasBucket;
+                log('s3', 'success', 'Buckets קיימים', { status: r.status, buckets: Array.isArray(d) ? d.map(b => b.name || b) : d, hasBucket });
+            } catch (e) {
+                log('s3', 'error', 'בדיקת buckets - שגיאה', e.message);
+                results.hasBucket = false;
+            }
+
+            // --- Step 4: Create diana-images bucket ---
+            addStep('s4', 'יצירת Storage Bucket: diana-images');
+            if (results.hasBucket) {
+                log('s4', 'success', 'diana-images bucket', 'ה-Bucket כבר קיים - מדלג ✅');
+            } else {
+                log('s4', 'running', 'יוצר diana-images bucket...', 'שולח בקשה...');
+                try {
+                    const r = await fetch(`${API}/api/storage/buckets`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            name: 'diana-images',
+                            public: true,
+                            allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+                            maxFileSize: 10485760
+                        })
+                    });
+                    const d = await r.json();
+                    results.bucketCreated = r.ok || r.status < 400;
+                    log('s4', r.ok || r.status < 400 ? 'success' : 'error', 'יצירת diana-images bucket', { status: r.status, response: d });
+                } catch (e) {
+                    log('s4', 'error', 'יצירת bucket - שגיאה', e.message);
+                }
+            }
+
+            // --- Step 5: Create subscribers table ---
+            addStep('s5', 'יצירת טבלת subscribers (מנויים)');
+            log('s5', 'running', 'יוצר טבלת subscribers...', 'שולח בקשה...');
+            try {
+                const existingSubs = JSON.stringify(results.tablesExisting || '').includes('subscribers');
+                if (existingSubs) {
+                    log('s5', 'success', 'טבלת subscribers', 'הטבלה כבר קיימת - מדלג ✅');
+                } else {
+                    const r = await fetch(`${API}/api/database/tables`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            name: 'subscribers',
+                            columns: [
+                                { name: 'id', type: 'uuid', primaryKey: true, defaultValue: 'gen_random_uuid()' },
+                                { name: 'name', type: 'text' },
+                                { name: 'email', type: 'text', notNull: true, unique: true },
+                                { name: 'phone', type: 'text' },
+                                { name: 'subscribed_at', type: 'timestamptz', defaultValue: 'now()' }
+                            ]
+                        })
+                    });
+                    const d = await r.json();
+                    log('s5', r.ok || r.status < 400 ? 'success' : 'error', 'יצירת טבלת subscribers', { status: r.status, response: d });
+                }
+            } catch (e) {
+                log('s5', 'error', 'יצירת subscribers - שגיאה', e.message);
+            }
+
+            // --- Step 6: Create links table ---
+            addStep('s6', 'יצירת טבלת links (קישורים/פודקאסטים)');
+            log('s6', 'running', 'יוצר טבלת links...', 'שולח בקשה...');
+            try {
+                const existingLinks = JSON.stringify(results.tablesExisting || '').includes('"links"');
+                if (existingLinks) {
+                    log('s6', 'success', 'טבלת links', 'הטבלה כבר קיימת - מדלג ✅');
+                    results.linksTableExists = true;
+                } else {
+                    const r = await fetch(`${API}/api/database/tables`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            name: 'links',
+                            columns: [
+                                { name: 'id', type: 'uuid', primaryKey: true, defaultValue: 'gen_random_uuid()' },
+                                { name: 'title', type: 'text', notNull: true },
+                                { name: 'description', type: 'text' },
+                                { name: 'url', type: 'text', notNull: true },
+                                { name: 'icon', type: 'text' },
+                                { name: 'type', type: 'text', defaultValue: "'Video'" },
+                                { name: 'display_order', type: 'int4', defaultValue: '0' },
+                                { name: 'created_at', type: 'timestamptz', defaultValue: 'now()' }
+                            ]
+                        })
+                    });
+                    const d = await r.json();
+                    results.linksTableExists = r.ok || r.status < 400;
+                    log('s6', results.linksTableExists ? 'success' : 'error', 'יצירת טבלת links', { status: r.status, response: d });
+                }
+            } catch (e) {
+                log('s6', 'error', 'יצירת links - שגיאה', e.message);
+            }
+
+            // --- Step 7: Seed default links ---
+            addStep('s7', 'הוספת קישורים ברירת מחדל (פודקאסטים/סרטונים)');
+            log('s7', 'running', 'מוסיף קישורים...', 'שולח בקשה...');
+            try {
+                let seeded = 0;
+                for (const link of DEFAULT_LINKS) {
+                    try {
+                        const r = await fetch(`${API}/rest/v1/links`, {
+                            method: 'POST',
+                            headers: { ...headers, 'apikey': KEY, 'Prefer': 'resolution=ignore-duplicates' },
+                            body: JSON.stringify(link)
+                        });
+                        if (r.ok || r.status === 409) seeded++;
+                    } catch (e) { /* ignore */ }
+                }
+                log('s7', 'success', 'קישורים ברירת מחדל', `נוספו ${seeded}/${DEFAULT_LINKS.length} קישורים ✅`);
+            } catch (e) {
+                log('s7', 'error', 'הוספת קישורים - שגיאה', e.message);
+            }
+
+            // --- Step 8: Final verification ---
+            addStep('s8', 'אימות סופי - בדיקה שהכל תקין');
+            log('s8', 'running', 'מאמת הכל...', 'בודק...');
+            try {
+                const [tr, br] = await Promise.all([
+                    fetch(`${API}/api/database/tables`, { headers }),
+                    fetch(`${API}/api/storage/buckets`, { headers })
+                ]);
+                const tables = await tr.json();
+                const buckets = await br.json();
+                const okImages = JSON.stringify(tables).includes('images');
+                const okSubs = JSON.stringify(tables).includes('subscribers');
+                const okLinks = JSON.stringify(tables).includes('links');
+                const okBucket = JSON.stringify(buckets).includes('diana-images');
+
+                log('s8', okImages && okBucket ? 'success' : 'error', 'אימות סופי', {
+                    'טבלת images': okImages ? '✅ קיימת' : '❌ חסרה',
+                    'טבלת subscribers': okSubs ? '✅ קיימת' : '❌ חסרה',
+                    'טבלת links': okLinks ? '✅ קיימת' : '❌ חסרה',
+                    'diana-images bucket': okBucket ? '✅ קיים' : '❌ חסר',
+                    'כל הטבלאות': Array.isArray(tables) ? tables.map(t => t.name || t) : tables,
+                });
+
+                const sum = document.getElementById('summary');
+                sum.style.display = 'block';
+                const allOk = okImages && okBucket && okSubs && okLinks;
+                sum.innerHTML = `
+                    <h2>${allOk ? '🎉 ההגדרה הושלמה בהצלחה!' : '⚠️ ההגדרה הושלמה חלקית'}</h2>
+                    <p>✅ טבלת images: ${okImages ? 'מוכנה' : '❌ חסרה'}</p>
+                    <p>✅ טבלת subscribers (מנויים): ${okSubs ? 'מוכנה' : '❌ חסרה'}</p>
+                    <p>✅ טבלת links (קישורים): ${okLinks ? 'מוכנה' : '❌ חסרה'}</p>
+                    <p>✅ diana-images bucket: ${okBucket ? 'מוכן' : '❌ חסר'}</p>
+                    <p>כתובת InsForge: <strong>${API}</strong></p>
+                    ${allOk ? '<p>🚀 האתר מוכן לשימוש! <br>1. גש ל-<a href="http://localhost:3000" style="color:#e94560">localhost:3000</a><br>2. כנס ל-<a href="http://localhost:3000/admin" style="color:#e94560">localhost:3000/admin</a> לניהול</p>' : ''}
+                `;
+            } catch (e) {
+                log('s8', 'error', 'אימות - שגיאה', e.message);
+            }
+
+            document.getElementById('runBtn').disabled = false;
+            document.getElementById('runBtn').textContent = '▶ הרץ שוב';
+        }
+    </script>
+</body>
+</html>
