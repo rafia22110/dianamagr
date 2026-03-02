@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { insforge } from "@/lib/insforge";
-import { ImageRecord } from "@/types/image";
-import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
+import { ImageRecord, CATEGORIES } from "@/types/image";
 import ImageUploadForm from "./ImageUploadForm";
 
 const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL || "";
