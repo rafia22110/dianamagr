@@ -1,5 +1,11 @@
 const API_URL = 'https://jxc5fi6w.us-east.insforge.app';
-const API_KEY = process.env.INSFORGE_API_KEY || 'ik_3fc7e3357b072c0eb4937b87fe5c63c5';
+const API_KEY = process.env.INSFORGE_API_KEY;
+
+if (!API_KEY) {
+  console.error('❌ Error: INSFORGE_API_KEY environment variable is missing.');
+  console.info('Please set it using: export INSFORGE_API_KEY=your_key_here');
+  process.exit(1);
+}
 
 async function createBucket() {
   const res = await fetch(`${API_URL}/api/storage/buckets`, {
