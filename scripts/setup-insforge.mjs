@@ -1,5 +1,11 @@
 const API_URL = 'https://jxc5fi6w.us-east.insforge.app';
-const API_KEY = process.env.INSFORGE_API_KEY || 'ik_3fc7e3357b072c0eb4937b87fe5c63c5';
+// 🛡️ Sentinel: Using environment variable to avoid hardcoding the API key.
+const API_KEY = process.env.INSFORGE_API_KEY;
+
+if (!API_KEY) {
+  console.error('❌ Error: INSFORGE_API_KEY is not set in environment variables.');
+  process.exit(1);
+}
 
 async function createBucket() {
   const res = await fetch(`${API_URL}/api/storage/buckets`, {
