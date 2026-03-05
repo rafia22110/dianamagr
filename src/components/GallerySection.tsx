@@ -1,5 +1,7 @@
 import { ImageRecord } from "@/types/image";
 
+const PLACEHOLDER_ITEMS = [0, 1, 2, 3, 4, 5];
+
 export default function GallerySection({ images }: { images: ImageRecord[] }) {
   return (
     <div className="max-w-7xl mx-auto overflow-hidden">
@@ -28,7 +30,7 @@ export default function GallerySection({ images }: { images: ImageRecord[] }) {
               </div>
             ))
           ) : (
-            [...Array(6)].map((_, i) => (
+            PLACEHOLDER_ITEMS.map((_, i) => (
               <div
                 key={i}
                 className="flex-none w-[300px] md:w-[450px] aspect-[4/3] bg-gradient-to-br from-[#f0e6d2] to-[#d4c3a3] rounded-3xl flex items-center justify-center snap-center"
