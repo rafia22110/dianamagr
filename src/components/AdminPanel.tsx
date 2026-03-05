@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { insforge } from "@/lib/insforge";
-import { ImageRecord } from "@/types/image";
-import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
+import { ImageRecord, CATEGORIES } from "@/types/image";
 import ImageUploadForm from "./ImageUploadForm";
 import { logout } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
