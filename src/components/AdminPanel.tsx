@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord } from "@/types/image";
 import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
@@ -63,12 +64,12 @@ export default function AdminPanel() {
       <header className="bg-gradient-to-r from-primary to-primary-light text-white p-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">ניהול תמונות - דיאנה רחמני</h1>
         <div className="flex gap-4">
-          <a
+          <Link
             href="/"
             className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30"
           >
             צפייה באתר
-          </a>
+          </Link>
         </div>
       </header>
 
