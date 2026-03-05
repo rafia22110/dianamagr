@@ -3,6 +3,9 @@ import { insforge } from "@/lib/insforge";
 import { ImageRecord } from "@/types/image";
 import GallerySection from "@/components/GallerySection";
 import PodcastsSection from "@/components/PodcastsSection";
+import SubscriptionForm from "@/components/SubscriptionForm";
+import WorkshopsSection from "@/components/WorkshopsSection";
+import BookPurchaseFlow from "@/components/BookPurchaseFlow";
 
 export default async function HomePage() {
   let heroImage: ImageRecord | null = null;
@@ -36,6 +39,7 @@ export default async function HomePage() {
           <li><Link href="#home" className="text-white font-bold hover:text-primary-light transition-colors">בית</Link></li>
           <li><Link href="#about" className="text-white font-bold hover:text-primary-light transition-colors">אודות</Link></li>
           <li><Link href="#book" className="text-white font-bold hover:text-primary-light transition-colors">הספר</Link></li>
+          <li><Link href="#workshops" className="text-white font-bold hover:text-primary-light transition-colors">סדנאות</Link></li>
           <li><Link href="#podcasts" className="text-white font-bold hover:text-primary-light transition-colors">פודקאסטים</Link></li>
           <li><Link href="#gallery" className="text-white font-bold hover:text-primary-light transition-colors">גלריה</Link></li>
           <li><Link href="#lectures" className="text-white font-bold hover:text-primary-light transition-colors text-primary-light">הזמנת הרצאה</Link></li>
@@ -101,6 +105,8 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <WorkshopsSection />
+
       <PodcastsSection />
 
       <section id="book" className="py-24 px-6 bg-gradient-to-br from-[#f0e6d2] to-[#fff5e6]">
@@ -126,9 +132,11 @@ export default async function HomePage() {
               <p className="text-xl leading-relaxed text-gray-800">
                 שבוע אחרי שהתחתנתי בגיל 20, שליח מהסוכנות היהודית דפק בדלת. המסע שהיה אמור להימשך יומיים נמשך כמעט חצי שנה.
               </p>
-              <div className="pt-8">
-                <a href="https://hasharon-post.co.il/" target="_blank" className="bg-primary text-white py-4 px-8 rounded-full font-bold shadow-lg hover:bg-primary-dark transition-colors inline-block">
-                  לרכישת הספר עכשיו
+              <div className="pt-8 space-y-4">
+                <BookPurchaseFlow />
+                <p className="text-sm text-gray-500 italic block">או רכשו דרך החנויות המורשות:</p>
+                <a href="https://hasharon-post.co.il/" target="_blank" className="text-primary hover:underline font-bold inline-block">
+                  לרכישת הספר ב-Hasharon Post ↗
                 </a>
               </div>
             </div>
@@ -174,15 +182,24 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <footer className="bg-black text-white py-16 px-6 text-center border-t border-white/10">
-        <p className="text-3xl font-bold mb-6 font-serif tracking-widest text-primary-light">דיאנה רחמני</p>
-        <p className="max-w-2xl mx-auto opacity-70 text-lg">כוכבת מאסטר שף | מחברת &quot;הבריחה מטהרן&quot; | מובילת המטבח הפרסי בישראל</p>
-        <div className="flex justify-center gap-6 mt-10">
-            <a href="#" className="hover:text-primary-light transition-colors">FaceBook</a>
-            <a href="#" className="hover:text-primary-light transition-colors">Instagram</a>
-            <a href="#" className="hover:text-primary-light transition-colors">TikTok</a>
+      <footer className="bg-black text-white py-24 px-6 text-center border-t border-white/10">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-16">
+           <div className="text-right">
+              <p className="text-4xl font-bold mb-6 font-serif tracking-widest text-primary-light">דיאנה רחמני</p>
+              <p className="max-w-md opacity-70 text-lg leading-relaxed">כוכבת מאסטר שף | מחברת &quot;הבריחה מטהרן&quot; | מובילת המטבח הפרסי בישראל. הצטרפו אלי למסע של טעמים והשראה.</p>
+              <div className="flex justify-start gap-6 mt-10">
+                  <a href="#" className="hover:text-primary-light transition-colors">FaceBook</a>
+                  <a href="#" className="hover:text-primary-light transition-colors">Instagram</a>
+                  <a href="#" className="hover:text-primary-light transition-colors">TikTok</a>
+              </div>
+           </div>
+           <div>
+              <SubscriptionForm />
+           </div>
         </div>
-        <p className="mt-12 opacity-40">© 2026 דיאנה רחמני. כל הזכויות שמורות.</p>
+        <div className="pt-16 border-t border-white/5 opacity-40 text-sm">
+            © 2026 דיאנה רחמני. כל הזכויות שמורות.
+        </div>
       </footer>
     </>
   );
