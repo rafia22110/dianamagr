@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
   try {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    await page.goto('http://localhost:3002/admin/login');
+    await page.goto('http://localhost:3000/admin/login');
     const title = await page.title();
     console.log('Page Title:', title);
     await browser.close();
