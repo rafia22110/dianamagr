@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord } from "@/types/image";
 import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
@@ -13,6 +14,7 @@ export default function AdminPanel() {
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const router = useRouter();
 
   const fetchImages = async () => {
     try {
@@ -58,11 +60,27 @@ export default function AdminPanel() {
     fetchImages();
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/admin/login");
+      router.refresh();
+    } catch (e) {
+      console.error("שגיאה בהתנתקות", e);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
       <header className="bg-gradient-to-r from-primary to-primary-light text-white p-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">ניהול תמונות - דיאנה רחמני</h1>
         <div className="flex gap-4">
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-500/80 rounded-lg hover:bg-red-500 transition-colors"
+          >
+            התנתק
+          </button>
           <a
             href="/"
             className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30"
