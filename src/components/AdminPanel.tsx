@@ -5,6 +5,8 @@ import { insforge } from "@/lib/insforge";
 import { ImageRecord } from "@/types/image";
 import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
 import ImageUploadForm from "./ImageUploadForm";
+import { logout } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
 const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL || "";
 const BUCKET = "diana-images";
@@ -53,9 +55,16 @@ export default function AdminPanel() {
     setMessage({ type: "success", text: "הנתיב הועתק ללוח" });
   };
 
+  const router = useRouter();
+
   const onUploadSuccess = () => {
     setMessage({ type: "success", text: "התמונה הועלתה בהצלחה!" });
     fetchImages();
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.refresh();
   };
 
   return (
@@ -69,6 +78,12 @@ export default function AdminPanel() {
           >
             צפייה באתר
           </a>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-500/80 rounded-lg hover:bg-red-500 text-white"
+          >
+            התנתק
+          </button>
         </div>
       </header>
 
