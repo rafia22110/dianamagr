@@ -48,6 +48,15 @@ vi.mock('./ImageUploadForm', () => {
   };
 });
 
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 import { insforge } from '@/lib/insforge';
 
 const mockImages = [
