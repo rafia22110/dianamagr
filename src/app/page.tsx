@@ -39,6 +39,7 @@ export default async function HomePage() {
           <li><Link href="#podcasts" className="text-white font-bold hover:text-primary-light transition-colors">פודקאסטים</Link></li>
           <li><Link href="#gallery" className="text-white font-bold hover:text-primary-light transition-colors">גלריה</Link></li>
           <li><Link href="#lectures" className="text-white font-bold hover:text-primary-light transition-colors text-primary-light">הזמנת הרצאה</Link></li>
+          <li><Link href="/admin" className="text-white/70 text-sm hover:text-white transition-colors">אזור ניהול</Link></li>
         </ul>
       </nav>
 

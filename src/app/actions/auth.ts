@@ -3,32 +3,42 @@
 import { cookies } from "next/headers";
 import crypto from "crypto";
 
-const ADMIN_USER = process.env.ADMIN_USERNAME;
-const ADMIN_PASS = process.env.ADMIN_PASSWORD;
-const SECRET_KEY = process.env.SESSION_SECRET;
+// Fallback session secret initialized once per runtime if not provided in process.env
+const FALLBACK_SECRET = crypto.randomBytes(32).toString('hex');
 
-if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Missing required administrative credentials in production.");
-  } else {
-    console.warn("⚠️ Warning: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET) are missing. Admin functionality will be disabled.");
+function getCredentials() {
+  return {
+    ADMIN_USER: process.env.ADMIN_USERNAME,
+    ADMIN_PASS: process.env.ADMIN_PASSWORD,
+    SECRET_KEY: process.env.SESSION_SECRET || FALLBACK_SECRET,
+  };
+}
+
+function checkCredentials() {
+  const { ADMIN_USER, ADMIN_PASS } = getCredentials();
+  if (!ADMIN_USER || !ADMIN_PASS) {
+    console.error("⚠️ Error: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD) are missing. Admin functionality will be disabled.");
+    return false;
   }
+  return true;
 }
 
 function signCookie(value: string) {
-  if (!SECRET_KEY) throw new Error("SESSION_SECRET is not configured");
-  const hmac = crypto.createHmac("sha256", SECRET_KEY);
+  const { SECRET_KEY } = getCredentials();
+  const hmac = crypto.createHmac("sha256", SECRET_KEY as string);
   hmac.update(value);
   return `${value}.${hmac.digest("hex")}`;
 }
 
 export async function verifyCookie(cookieValue: string | undefined): Promise<boolean> {
+  if (!checkCredentials()) return false;
+  const { SECRET_KEY } = getCredentials();
   if (!cookieValue || !SECRET_KEY) return false;
   const parts = cookieValue.split(".");
   if (parts.length !== 2) return false;
 
   const [value, signature] = parts;
-  const expectedSignature = crypto.createHmac("sha256", SECRET_KEY).update(value).digest("hex");
+  const expectedSignature = crypto.createHmac("sha256", SECRET_KEY as string).update(value).digest("hex");
 
   // 🛡️ Sentinel: timingSafeEqual requires buffers of the same length to avoid throwing.
   // We check string lengths first to avoid unnecessary Buffer allocations.
@@ -43,6 +53,10 @@ export async function verifyCookie(cookieValue: string | undefined): Promise<boo
 }
 
 export async function login(formData: FormData) {
+  if (!checkCredentials()) {
+    return { success: false, error: "שגיאת מערכת: אזור הניהול אינו מוגדר" };
+  }
+  const { ADMIN_USER, ADMIN_PASS } = getCredentials();
   const username = formData.get("username");
   const password = formData.get("password");
 
