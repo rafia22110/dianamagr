@@ -30,7 +30,16 @@ export async function verifyCookie(cookieValue: string | undefined): Promise<boo
   const [value, signature] = parts;
   const expectedSignature = crypto.createHmac("sha256", SECRET_KEY).update(value).digest("hex");
 
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
+  // 🛡️ Sentinel: timingSafeEqual requires buffers of the same length to avoid throwing.
+  // We check string lengths first to avoid unnecessary Buffer allocations.
+  if (signature.length !== expectedSignature.length) {
+    return false;
+  }
+
+  const signatureBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
 }
 
 export async function login(formData: FormData) {
@@ -45,6 +54,7 @@ export async function login(formData: FormData) {
     cookieStore.set("admin_session", signedValue, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax", // 🛡️ Sentinel: Defense-in-depth against CSRF.
       path: "/",
       maxAge: 60 * 60 * 24, // 1 day
     });
