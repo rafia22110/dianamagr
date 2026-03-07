@@ -14,12 +14,10 @@ function getCredentials() {
 function checkCredentials() {
   const { ADMIN_USER, ADMIN_PASS, SECRET_KEY } = getCredentials();
   if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("Missing required administrative credentials in production.");
-    } else {
-      console.warn("⚠️ Warning: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET) are missing. Admin functionality will be disabled.");
-    }
+    console.error("⚠️ Error: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET) are missing. Admin functionality will be disabled.");
+    return false;
   }
+  return true;
 }
 
 function signCookie(value: string) {
@@ -31,7 +29,7 @@ function signCookie(value: string) {
 }
 
 export async function verifyCookie(cookieValue: string | undefined): Promise<boolean> {
-  checkCredentials();
+  if (!checkCredentials()) return false;
   const { SECRET_KEY } = getCredentials();
   if (!cookieValue || !SECRET_KEY) return false;
   const parts = cookieValue.split(".");
@@ -53,7 +51,9 @@ export async function verifyCookie(cookieValue: string | undefined): Promise<boo
 }
 
 export async function login(formData: FormData) {
-  checkCredentials();
+  if (!checkCredentials()) {
+    return { success: false, error: "שגיאת מערכת: אזור הניהול אינו מוגדר" };
+  }
   const { ADMIN_USER, ADMIN_PASS } = getCredentials();
   const username = formData.get("username");
   const password = formData.get("password");
