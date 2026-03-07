@@ -6,6 +6,7 @@ import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
 
 const BUCKET = "diana-images";
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 🛡️ Sentinel: 5MB limit to prevent resource exhaustion.
 
 export default function ImageUploadForm({ onSuccess }: { onSuccess: () => void }) {
   const [category, setCategory] = useState("gallery");
@@ -31,6 +32,17 @@ export default function ImageUploadForm({ onSuccess }: { onSuccess: () => void }
       setError("פורמט לא נתמך. העלי JPG, PNG, GIF או WEBP");
       return;
     }
+    if (file.size > MAX_FILE_SIZE) {
+      setError("הקובץ גדול מדי. הגודל המקסימלי הוא 5MB");
+      return;
+    }
+
+    // 🛡️ Sentinel: Sanitize category to prevent path traversal in storage keys.
+    if (!(category in CATEGORIES)) {
+      setError("קטגוריה לא תקינה");
+      return;
+    }
+
     setError("");
     setLoading(true);
     try {
