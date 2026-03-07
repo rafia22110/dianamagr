@@ -3,18 +3,21 @@
 import { cookies } from "next/headers";
 import crypto from "crypto";
 
+// Fallback session secret initialized once per runtime if not provided in process.env
+const FALLBACK_SECRET = crypto.randomBytes(32).toString('hex');
+
 function getCredentials() {
   return {
     ADMIN_USER: process.env.ADMIN_USERNAME,
     ADMIN_PASS: process.env.ADMIN_PASSWORD,
-    SECRET_KEY: process.env.SESSION_SECRET,
+    SECRET_KEY: process.env.SESSION_SECRET || FALLBACK_SECRET,
   };
 }
 
 function checkCredentials() {
-  const { ADMIN_USER, ADMIN_PASS, SECRET_KEY } = getCredentials();
-  if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
-    console.error("⚠️ Error: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET) are missing. Admin functionality will be disabled.");
+  const { ADMIN_USER, ADMIN_PASS } = getCredentials();
+  if (!ADMIN_USER || !ADMIN_PASS) {
+    console.error("⚠️ Error: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD) are missing. Admin functionality will be disabled.");
     return false;
   }
   return true;
@@ -22,8 +25,7 @@ function checkCredentials() {
 
 function signCookie(value: string) {
   const { SECRET_KEY } = getCredentials();
-  if (!SECRET_KEY) throw new Error("SESSION_SECRET is not configured");
-  const hmac = crypto.createHmac("sha256", SECRET_KEY);
+  const hmac = crypto.createHmac("sha256", SECRET_KEY as string);
   hmac.update(value);
   return `${value}.${hmac.digest("hex")}`;
 }
@@ -36,7 +38,7 @@ export async function verifyCookie(cookieValue: string | undefined): Promise<boo
   if (parts.length !== 2) return false;
 
   const [value, signature] = parts;
-  const expectedSignature = crypto.createHmac("sha256", SECRET_KEY).update(value).digest("hex");
+  const expectedSignature = crypto.createHmac("sha256", SECRET_KEY as string).update(value).digest("hex");
 
   // 🛡️ Sentinel: timingSafeEqual requires buffers of the same length to avoid throwing.
   // We check string lengths first to avoid unnecessary Buffer allocations.
