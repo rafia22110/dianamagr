@@ -7,15 +7,18 @@ const ADMIN_USER = process.env.ADMIN_USERNAME;
 const ADMIN_PASS = process.env.ADMIN_PASSWORD;
 const SECRET_KEY = process.env.SESSION_SECRET;
 
-if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Missing required administrative credentials in production.");
-  } else {
-    console.warn("⚠️ Warning: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET) are missing. Admin functionality will be disabled.");
+function checkAdminConfig() {
+  if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("Missing required administrative credentials in production.");
+    } else {
+      console.warn("⚠️ Warning: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET) are missing. Admin functionality will be disabled.");
+    }
   }
 }
 
 function signCookie(value: string) {
+  checkAdminConfig();
   if (!SECRET_KEY) throw new Error("SESSION_SECRET is not configured");
   const hmac = crypto.createHmac("sha256", SECRET_KEY);
   hmac.update(value);
