@@ -14,3 +14,8 @@
 **Vulnerability:** Use of `crypto.timingSafeEqual` without length validation can cause application crashes (500 errors) when provided with signatures of incorrect length.
 **Learning:** `timingSafeEqual` throws a `TypeError` if input buffers differ in length. This "fail-loudly" behavior can lead to DoS or provide a side-channel if error handling is inconsistent.
 **Prevention:** Always perform a length check (ideally on strings before buffer allocation) before calling `timingSafeEqual`.
+
+## 2026-03-02 - Hardcoded Infrastructure Keys in Setup Scripts
+**Vulnerability:** Infrastructure API keys were hardcoded in multiple setup scripts (`scripts/create_subscribers_table.js`, `insforge_setup.mjs`, and `setup_insforge.html`) for convenience during initial development.
+**Learning:** Setup and utility scripts are often overlooked and can contain hardcoded secrets that leak during source code audits or if the repository is made public. Client-side setup tools are particularly risky as they expose keys in the browser.
+**Prevention:** Never hardcode secrets in scripts. Use environment variables for Node.js scripts and secure input fields for client-side tools to ensure keys are provided at runtime by authorized users.

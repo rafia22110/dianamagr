@@ -1,5 +1,11 @@
 const API = 'https://ane7v4ce.us-east.insforge.app';
-const KEY = 'ik_bf44df2031c6d8808e0d4cff27b52575';
+const KEY = process.env.INSFORGE_API_KEY;
+
+if (!KEY) {
+    console.error('❌ Error: INSFORGE_API_KEY is not set in environment variables.');
+    process.exit(1);
+}
+
 const H = { 'Authorization': `Bearer ${KEY}`, 'Content-Type': 'application/json' };
 
 const ok = (s) => `\x1b[32m✅ ${s}\x1b[0m`;
