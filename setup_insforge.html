@@ -110,14 +110,18 @@
 <body>
     <h1>🚀 InsForge Setup - אתר דיאנה רחמני</h1>
     <p>לחץ כדי ליצור את הטבלאות ו-Bucket הדרושים ל-InsForge</p>
-    <button id="runBtn" onclick="runAll()">▶ בצע הגדרה מלאה</button>
+
+    <div class="step" style="background: #16213e; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+        <label for="apiKey" style="display: block; margin-bottom: 10px; font-weight: bold;">מפתח API של InsForge (INSFORGE_API_KEY):</label>
+        <input type="password" id="apiKey" placeholder="הכנס את המפתח כאן..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #0f3460; background: #0d0d1a; color: white; margin-bottom: 15px;">
+        <button id="runBtn" onclick="runAll()">▶ בצע הגדרה מלאה</button>
+    </div>
 
     <div id="steps"></div>
     <div id="summary"></div>
 
     <script>
         const API = 'https://ane7v4ce.us-east.insforge.app';
-        const KEY = 'ik_bf44df2031c6d8808e0d4cff27b52575';
 
         // Default links to seed into the links table
         const DEFAULT_LINKS = [
@@ -147,11 +151,6 @@
             }
         ];
 
-        const headers = {
-            'Authorization': `Bearer ${KEY}`,
-            'Content-Type': 'application/json'
-        };
-
         function log(stepId, status, title, detail) {
             const el = document.getElementById(stepId);
             el.className = `step ${status}`;
@@ -175,10 +174,21 @@
         }
 
         async function runAll() {
+            const KEY = document.getElementById('apiKey').value.trim();
+            if (!KEY) {
+                alert('אנא הכנס מפתח API תקין');
+                return;
+            }
+
             document.getElementById('runBtn').disabled = true;
             document.getElementById('runBtn').textContent = '⏳ מבצע...';
             document.getElementById('steps').innerHTML = '';
             document.getElementById('summary').style.display = 'none';
+
+            const headers = {
+                'Authorization': `Bearer ${KEY}`,
+                'Content-Type': 'application/json'
+            };
 
             const results = {};
 
