@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { insforge } from "@/lib/insforge";
 import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
 

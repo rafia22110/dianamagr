@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord, CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
 import ImageUploadForm from "./ImageUploadForm";
+import { logout } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
 const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL || "";
 const BUCKET = "diana-images";
@@ -128,6 +130,13 @@ export default function AdminPanel() {
     } catch { msg("error", "שגיאה במחיקה"); }
   };
 
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.refresh();
+  };
+
   useEffect(() => { fetchImages(); }, []);
   useEffect(() => { if (tab === "subscribers") fetchSubscribers(); }, [tab]);
   useEffect(() => { if (tab === "links") fetchLinks(); }, [tab]);
@@ -139,7 +148,20 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-gray-100" dir="rtl">
       <header className="bg-gradient-to-r from-primary to-primary-light text-white p-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">ניהול האתר — דיאנה רחמני</h1>
-        <a href="/" className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30">צפייה באתר</a>
+        <div className="flex gap-4">
+          <a
+            href="/"
+            className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30"
+          >
+            צפייה באתר
+          </a>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-500/80 rounded-lg hover:bg-red-500 text-white"
+          >
+            התנתק
+          </button>
+        </div>
       </header>
 
       {/* Tabs */}
