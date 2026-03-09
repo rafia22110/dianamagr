@@ -11,8 +11,6 @@ function checkAdminConfig() {
   if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
     if (process.env.NODE_ENV === "production") {
       console.error("Missing required administrative credentials in production.");
-    } else {
-      console.warn("⚠️ Warning: Administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET) are missing. Admin functionality will be disabled.");
     }
   }
 }
