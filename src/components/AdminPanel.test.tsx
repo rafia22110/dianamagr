@@ -143,7 +143,7 @@ describe("AdminPanel", () => {
 
     expect(writeTextMock).toHaveBeenCalledTimes(1);
     expect(writeTextMock.mock.calls[0][0]).toContain("path%2Fto%2Ftest1.jpg");
-    expect(screen.getByText("הנתיב הועתק ללוח")).toBeDefined();
+    expect(screen.getByText("הנתיב הועתק ללוח!")).toBeDefined();
   });
 
   it("clicking delete deletes image, shows success, and refetches", async () => {

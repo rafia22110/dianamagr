@@ -1,5 +1,6 @@
 import React from "react";
 import { insforge } from "@/lib/insforge";
+import { LinkRecord } from "@/types/link";
 
 // Fallback links if DB is empty or unavailable
 const FALLBACK_LINKS = [
@@ -31,16 +32,6 @@ const FALLBACK_LINKS = [
     display_order: 3,
   },
 ];
-
-type LinkRecord = {
-  id: string;
-  title: string;
-  description?: string;
-  url: string;
-  icon?: string;
-  type?: string;
-  display_order?: number;
-};
 
 async function fetchLinks(): Promise<LinkRecord[]> {
   try {

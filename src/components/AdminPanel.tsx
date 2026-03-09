@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord, CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
+import { LinkRecord } from "@/types/link";
 import ImageUploadForm from "./ImageUploadForm";
 import { logout } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
@@ -18,16 +19,6 @@ type Subscriber = {
   email: string;
   phone?: string;
   subscribed_at?: string;
-};
-
-type LinkRecord = {
-  id: string;
-  title: string;
-  description?: string;
-  url: string;
-  icon?: string;
-  type?: string;
-  display_order?: number;
 };
 
 export default function AdminPanel() {
@@ -67,7 +58,7 @@ export default function AdminPanel() {
     try {
       if (storagePath) await insforge.storage.from(BUCKET).remove(storagePath);
       await insforge.database.from("images").delete().eq("id", id);
-      msg("success", "התמונה נמחקה");
+      msg("success", "התמונה נמחקה בהצלחה");
       fetchImages();
     } catch { msg("error", "שגיאה במחיקה"); }
   };
@@ -76,7 +67,7 @@ export default function AdminPanel() {
     const path = img.storage_path || img.filename;
     const url = `${baseUrl}/api/storage/buckets/${BUCKET}/objects/${encodeURIComponent(path)}`;
     navigator.clipboard.writeText(url);
-    msg("success", "הנתיב הועתק");
+    msg("success", "הנתיב הועתק ללוח!");
   };
 
   // ── Subscribers ──
@@ -185,7 +176,7 @@ export default function AdminPanel() {
           <>
             <section className="bg-white rounded-xl p-6 shadow">
               <h2 className="text-xl font-bold text-primary mb-4">העלאת תמונה חדשה</h2>
-              <ImageUploadForm onSuccess={() => { msg("success", "התמונה הועלתה!"); fetchImages(); }} />
+              <ImageUploadForm onSuccess={() => { msg("success", "התמונה הועלתה בהצלחה!"); fetchImages(); }} />
             </section>
             <section>
               <h2 className="text-xl font-bold text-primary mb-4">כל התמונות ({images.length})</h2>
