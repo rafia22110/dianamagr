@@ -92,7 +92,7 @@ export default async function HomePage() {
               <strong className="text-primary text-2xl">נולדתי בטהרן</strong>, בבית חולים יהודי, וגדלתי בשכונת מהלה, שם שררו יחסים טובים בין יהודים למוסלמים.
               בילדותי למדתי בבית הספר היהודי &quot;אליאנס אתהאד&quot;, ומאמא למדתי את האהבה למטבח הפרסי.
             </p>
-            <div className="bg-primary/5 p-6 rounded-2xl mb-8 italic border-r-4 border-primary">
+            <div className="bg-primary/5 p-6 rounded-2xl mb-8 italic border-s-4 border-primary">
               &quot;המסע שהיה אמור להימשך יומיים נמשך כמעט חצי שנה. דרך הרים, גשרים וסיכונים אינסופיים – הגענו הביתה, לישראל.&quot;
             </div>
             <p>

@@ -73,7 +73,7 @@ export default async function PodcastsSection() {
           {links.map((item) => (
             <div
               key={item.id}
-              className="bg-[#f9f7f4] border-r-4 border-primary-light p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between"
+              className="bg-[#f9f7f4] border-s-4 border-primary-light p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between"
             >
               <div>
                 {item.icon && (
@@ -97,7 +97,7 @@ export default async function PodcastsSection() {
                 className="inline-flex items-center text-primary font-bold hover:underline"
               >
                 {item.type === "Spotify" ? "האזינו ב-Spotify" : "צפו עכשיו"}
-                <span className="mr-2">←</span>
+                <span className="ms-2">←</span>
               </a>
             </div>
           ))}

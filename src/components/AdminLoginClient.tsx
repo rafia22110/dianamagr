@@ -68,7 +68,7 @@ export default function AdminLoginClient() {
         </form>
         <div className="mt-6 text-center">
           <a href="/" className="text-gray-500 hover:text-primary transition-colors text-sm">
-            &larr; חזרה לאתר
+            &rarr; חזרה לאתר
           </a>
         </div>
       </div>
