@@ -143,7 +143,7 @@ describe("AdminPanel", () => {
 
     expect(writeTextMock).toHaveBeenCalledTimes(1);
     expect(writeTextMock.mock.calls[0][0]).toContain("path%2Fto%2Ftest1.jpg");
-    expect(screen.getByText("הנתיב הועתק ללוח")).toBeDefined();
+    expect(screen.getByText("הנתיב הועתק")).toBeDefined();
   });
 
   it("clicking delete deletes image, shows success, and refetches", async () => {
@@ -167,7 +167,7 @@ describe("AdminPanel", () => {
       expect(mockRemove).toHaveBeenCalledWith("path/to/test1.jpg");
       expect(mockEq).toHaveBeenCalledTimes(1);
       expect(mockEq).toHaveBeenCalledWith("id", "1");
-      expect(screen.getByText("התמונה נמחקה בהצלחה")).toBeDefined();
+      expect(screen.getByText("התמונה נמחקה")).toBeDefined();
       expect(mockOrder).toHaveBeenCalledTimes(2);
     });
   });
@@ -187,7 +187,7 @@ describe("AdminPanel", () => {
     fireEvent.click(uploadSuccessButton);
 
     await waitFor(() => {
-      expect(screen.getByText("התמונה הועלתה בהצלחה!")).toBeDefined();
+      expect(screen.getByText("התמונה הועלתה!")).toBeDefined();
       expect(mockOrder).toHaveBeenCalledTimes(2);
     });
   });

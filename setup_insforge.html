@@ -109,7 +109,14 @@
 
 <body>
     <h1>🚀 InsForge Setup - אתר דיאנה רחמני</h1>
-    <p>לחץ כדי ליצור את הטבלאות ו-Bucket הדרושים ל-InsForge</p>
+    <p>הזיני את מפתח ה-API של InsForge כדי ליצור את הטבלאות ו-Bucket הדרושים:</p>
+
+    <div class="step" style="background: #16213e; border-left: 4px solid #e94560; margin-bottom: 24px;">
+        <label style="display: block; margin-bottom: 10px; font-weight: bold;">InsForge Management API Key (ik_...):</label>
+        <input type="password" id="apiKeyInput" placeholder="הדביקי כאן את המפתח..."
+               style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #0f3460; background: #0d0d1a; color: white; outline: none; box-sizing: border-box;">
+    </div>
+
     <button id="runBtn" onclick="runAll()">▶ בצע הגדרה מלאה</button>
 
     <div id="steps"></div>
@@ -117,7 +124,6 @@
 
     <script>
         const API = 'https://ane7v4ce.us-east.insforge.app';
-        const KEY = 'ik_bf44df2031c6d8808e0d4cff27b52575';
 
         // Default links to seed into the links table
         const DEFAULT_LINKS = [
@@ -147,11 +153,6 @@
             }
         ];
 
-        const headers = {
-            'Authorization': `Bearer ${KEY}`,
-            'Content-Type': 'application/json'
-        };
-
         function log(stepId, status, title, detail) {
             const el = document.getElementById(stepId);
             el.className = `step ${status}`;
@@ -175,6 +176,17 @@
         }
 
         async function runAll() {
+            const KEY = document.getElementById('apiKeyInput').value.trim();
+            if (!KEY || !KEY.startsWith('ik_')) {
+                alert('אנא הזיני מפתח API תקין (מתחיל ב-ik_)');
+                return;
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${KEY}`,
+                'Content-Type': 'application/json'
+            };
+
             document.getElementById('runBtn').disabled = true;
             document.getElementById('runBtn').textContent = '⏳ מבצע...';
             document.getElementById('steps').innerHTML = '';
