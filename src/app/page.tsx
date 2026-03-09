@@ -2,20 +2,22 @@ import Link from "next/link";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord } from "@/types/image";
 import GallerySection from "@/components/GallerySection";
-import PodcastsSection from "@/components/PodcastsSection";
+import PodcastsSection, { fetchLinks, LinkRecord } from "@/components/PodcastsSection";
 import NewsletterSection from "@/components/NewsletterSection";
 
 export default async function HomePage() {
   let heroImage: ImageRecord | null = null;
   let bookCover: ImageRecord | null = null;
   let galleryImages: ImageRecord[] = [];
+  let links: LinkRecord[] = [];
 
   try {
     const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL;
-    const [heroRes, bookRes, galleryRes] = await Promise.all([
+    const [heroRes, bookRes, galleryRes, linksRes] = await Promise.all([
       insforge.database.from("images").select("*").eq("category", "hero").limit(1).maybeSingle(),
       insforge.database.from("images").select("*").eq("category", "book").limit(1).maybeSingle(),
       insforge.database.from("images").select("*").eq("category", "gallery").order("upload_date", { ascending: false }).limit(24),
+      fetchLinks(),
     ]);
 
     if (heroRes.data) heroImage = heroRes.data as ImageRecord;
@@ -24,6 +26,7 @@ export default async function HomePage() {
       ...img,
       url: img.url || (img.storage_path ? `${baseUrl}/api/storage/buckets/diana-images/objects/${encodeURIComponent(img.storage_path)}` : undefined),
     }));
+    links = linksRes;
   } catch (e) {
     console.warn("InsForge fetch warning:", e);
   }
@@ -103,7 +106,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <PodcastsSection />
+      <PodcastsSection links={links} />
 
       <section id="book" className="py-24 px-6 bg-gradient-to-br from-[#f0e6d2] to-[#fff5e6]">
         <div className="max-w-5xl mx-auto">

@@ -32,7 +32,7 @@ const FALLBACK_LINKS = [
   },
 ];
 
-type LinkRecord = {
+export type LinkRecord = {
   id: string;
   title: string;
   description?: string;
@@ -42,7 +42,7 @@ type LinkRecord = {
   display_order?: number;
 };
 
-async function fetchLinks(): Promise<LinkRecord[]> {
+export async function fetchLinks(): Promise<LinkRecord[]> {
   try {
     const { data, error } = await insforge.database
       .from("links")
@@ -56,9 +56,7 @@ async function fetchLinks(): Promise<LinkRecord[]> {
   }
 }
 
-export default async function PodcastsSection() {
-  const links = await fetchLinks();
-
+export default function PodcastsSection({ links }: { links: LinkRecord[] }) {
   return (
     <section id="podcasts" className="py-20 px-6 bg-white">
       <div className="max-w-6xl mx-auto">
