@@ -187,6 +187,9 @@ export default async function HomePage() {
           <a href="#" className="hover:text-primary-light transition-colors">TikTok</a>
         </div>
         <p className="mt-12 opacity-40">© 2026 דיאנה רחמני. כל הזכויות שמורות.</p>
+        <div className="mt-4">
+          <Link href="/admin" className="text-white/30 hover:text-white/70 text-sm transition-colors">כניסת מנהלים</Link>
+        </div>
       </footer>
     </>
   );
