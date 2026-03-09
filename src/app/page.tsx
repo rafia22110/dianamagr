@@ -20,10 +20,13 @@ export default async function HomePage() {
 
     if (heroRes.data) heroImage = heroRes.data as ImageRecord;
     if (bookRes.data) bookCover = bookRes.data as ImageRecord;
-    if (galleryRes.data) galleryImages = (galleryRes.data as ImageRecord[]).map((img) => ({
-      ...img,
-      url: img.url || (img.storage_path ? `${baseUrl}/api/storage/buckets/diana-images/objects/${encodeURIComponent(img.storage_path)}` : undefined),
-    }));
+    if (galleryRes.data) {
+      const storagePrefix = `${baseUrl}/api/storage/buckets/diana-images/objects/`;
+      galleryImages = (galleryRes.data as ImageRecord[]).map((img) => ({
+        ...img,
+        url: img.url || (img.storage_path ? storagePrefix + encodeURIComponent(img.storage_path) : undefined),
+      }));
+    }
   } catch (e) {
     console.warn("InsForge fetch warning:", e);
   }
