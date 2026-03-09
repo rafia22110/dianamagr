@@ -35,7 +35,7 @@ export default function ImageUploadForm({ onSuccess }: { onSuccess: () => void }
     setLoading(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
-      const key = `${category}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const key = `${category}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
 
       const { data: uploadData, error: uploadErr } = await insforge.storage
         .from(BUCKET)
