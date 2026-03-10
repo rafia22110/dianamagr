@@ -117,7 +117,6 @@
 
     <script>
         const API = 'https://ane7v4ce.us-east.insforge.app';
-        const KEY = 'ik_bf44df2031c6d8808e0d4cff27b52575';
 
         // Default links to seed into the links table
         const DEFAULT_LINKS = [
@@ -147,11 +146,6 @@
             }
         ];
 
-        const headers = {
-            'Authorization': `Bearer ${KEY}`,
-            'Content-Type': 'application/json'
-        };
-
         function log(stepId, status, title, detail) {
             const el = document.getElementById(stepId);
             el.className = `step ${status}`;
@@ -175,6 +169,17 @@
         }
 
         async function runAll() {
+            const KEY = window.prompt('Enter InsForge API Key:');
+            if (!KEY) {
+                alert('API Key is required to run the setup.');
+                return;
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${KEY}`,
+                'Content-Type': 'application/json'
+            };
+
             document.getElementById('runBtn').disabled = true;
             document.getElementById('runBtn').textContent = '⏳ מבצע...';
             document.getElementById('steps').innerHTML = '';
