@@ -1,5 +1,11 @@
 // Script to create the subscribers table in InsForge
-const API_KEY = 'ik_bf44df2031c6d8808e0d4cff27b52575';
+const API_KEY = process.env.INSFORGE_API_KEY;
+
+if (!API_KEY) {
+  console.error("❌ Error: INSFORGE_API_KEY is not set in environment variables.");
+  process.exit(1);
+}
+
 const BASE_URL = 'https://ane7v4ce.us-east.insforge.app';
 
 async function createSubscribersTable() {
