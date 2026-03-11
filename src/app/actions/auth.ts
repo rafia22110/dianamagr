@@ -3,9 +3,9 @@
 import { cookies } from "next/headers";
 import crypto from "crypto";
 
-const ADMIN_USER = process.env.ADMIN_USERNAME;
-const ADMIN_PASS = process.env.ADMIN_PASSWORD;
-const SECRET_KEY = process.env.SESSION_SECRET;
+const ADMIN_USER = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_PASS = process.env.ADMIN_PASSWORD || "admin123";
+const SECRET_KEY = process.env.SESSION_SECRET || "diana_secret_key_123456789";
 
 function checkAdminConfig() {
   if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
