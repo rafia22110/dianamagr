@@ -133,7 +133,7 @@ describe('ImageUploadForm', () => {
       expect(mockUpload).toHaveBeenCalledTimes(1);
     });
 
-    expect(mockUpload.mock.calls[0][0]).toMatch(/^book\/\d+_[a-z0-9]+\.jpg$/);
+    expect(mockUpload.mock.calls[0][0]).toMatch(/^book\/\d+_[a-z0-9-]+\.jpg$/);
     expect(mockUpload.mock.calls[0][1]).toBe(file);
 
     await waitFor(() => {

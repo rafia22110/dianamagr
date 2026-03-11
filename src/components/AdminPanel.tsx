@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord, CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
+import { sanitizeUrl } from "@/lib/utils";
 import ImageUploadForm from "./ImageUploadForm";
 import { logout } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
@@ -195,7 +196,7 @@ export default function AdminPanel() {
                     <div key={img.id} className="bg-white rounded-xl shadow overflow-hidden">
                       <div className="aspect-video bg-gray-200">
                         {(img.url || img.storage_path || img.filename) && (
-                          <img src={img.url || `${baseUrl}/api/storage/buckets/${BUCKET}/objects/${encodeURIComponent(img.storage_path || img.filename)}`}
+                          <img src={sanitizeUrl(img.url || `${baseUrl}/api/storage/buckets/${BUCKET}/objects/${encodeURIComponent(img.storage_path || img.filename)}`)}
                             alt={img.alt_text || ""} className="w-full h-full object-cover" />
                         )}
                       </div>
@@ -293,10 +294,10 @@ export default function AdminPanel() {
                 <div className="space-y-3">
                   {links.map(link => (
                     <div key={link.id} className="bg-white rounded-xl p-4 shadow flex items-center gap-4">
-                      {link.icon && <img src={link.icon} alt="" className="w-8 h-8 object-contain flex-shrink-0" />}
+                      {link.icon && <img src={sanitizeUrl(link.icon)} alt="" className="w-8 h-8 object-contain flex-shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-gray-800 truncate">{link.title}</p>
-                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate block">{link.url}</a>
+                        <a href={sanitizeUrl(link.url)} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate block">{link.url}</a>
                         {link.description && <p className="text-xs text-gray-500 mt-1 truncate">{link.description}</p>}
                       </div>
                       <span className="text-xs bg-gray-100 px-2 py-1 rounded flex-shrink-0">{link.type}</span>

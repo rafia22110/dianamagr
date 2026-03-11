@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord } from "@/types/image";
+import { sanitizeUrl } from "@/lib/utils";
 import GallerySection from "@/components/GallerySection";
 import PodcastsSection, { fetchLinks, LinkRecord } from "@/components/PodcastsSection";
 import NewsletterSection from "@/components/NewsletterSection";
@@ -58,7 +59,7 @@ export default async function HomePage() {
         {/* Hero Background with Overlay */}
         <div
           className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
-          style={{ backgroundImage: `url('${heroBg}')` }}
+          style={{ backgroundImage: `url('${sanitizeUrl(heroBg)}')` }}
         >
           <div className="absolute inset-0 hero-gradient"></div>
         </div>
@@ -124,7 +125,7 @@ export default async function HomePage() {
               <div className="absolute inset-0 bg-primary-light rounded-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500 shadow-xl"></div>
               <div className="relative bg-white p-4 rounded-2xl shadow-2xl transform transition-transform duration-500 group-hover:-translate-y-2">
                 <img
-                  src={bookCover?.url || "https://www.netbook.co.il/Files/Store/Items/15415/original.jpg"}
+                  src={sanitizeUrl(bookCover?.url || "https://www.netbook.co.il/Files/Store/Items/15415/original.jpg")}
                   alt="הבריחה מטהרן"
                   className="w-full h-auto rounded-lg shadow-inner"
                 />

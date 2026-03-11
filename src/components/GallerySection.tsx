@@ -1,4 +1,5 @@
 import { ImageRecord } from "@/types/image";
+import { sanitizeUrl } from "@/lib/utils";
 
 const PLACEHOLDER_ITEMS = [0, 1, 2, 3, 4, 5];
 
@@ -20,7 +21,7 @@ export default function GallerySection({ images }: { images: ImageRecord[] }) {
                 className="flex-none w-[300px] md:w-[450px] aspect-[4/3] relative rounded-3xl overflow-hidden snap-center shadow-xl group/item"
               >
                 <img
-                  src={img.url}
+                  src={sanitizeUrl(img.url)}
                   alt={img.alt_text || "דיאנה רחמני"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110"
                 />

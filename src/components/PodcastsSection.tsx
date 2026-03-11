@@ -1,4 +1,5 @@
 import { insforge } from "@/lib/insforge";
+import { sanitizeUrl } from "@/lib/utils";
 
 // Fallback links if DB is empty or unavailable
 const FALLBACK_LINKS = [
@@ -135,7 +136,7 @@ export default function PodcastsSection({ links }: { links: LinkRecord[] }) {
               <div>
                 {item.icon && (
                   <img
-                    src={item.icon}
+                    src={sanitizeUrl(item.icon)}
                     alt={item.type || ""}
                     className="w-10 h-10 mb-4 opacity-80"
                   />
@@ -148,7 +149,7 @@ export default function PodcastsSection({ links }: { links: LinkRecord[] }) {
                 </p>
               </div>
               <a
-                href={item.url}
+                href={sanitizeUrl(item.url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center text-primary font-bold hover:underline"
