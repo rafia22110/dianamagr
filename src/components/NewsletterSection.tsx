@@ -69,7 +69,7 @@ export default function NewsletterSection() {
                         className="bg-white rounded-3xl shadow-2xl p-10 border border-gray-100 space-y-5"
                     >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="text-right">
+                            <div className="text-start">
                                 <label className="block text-sm font-semibold text-gray-600 mb-2">שם מלא</label>
                                 <input
                                     type="text"
@@ -79,7 +79,7 @@ export default function NewsletterSection() {
                                     className="w-full border-2 border-gray-200 focus:border-primary rounded-xl p-4 outline-none transition-all text-lg"
                                 />
                             </div>
-                            <div className="text-right">
+                            <div className="text-start">
                                 <label className="block text-sm font-semibold text-gray-600 mb-2">טלפון (לא חובה)</label>
                                 <input
                                     type="tel"
@@ -90,7 +90,7 @@ export default function NewsletterSection() {
                                 />
                             </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-start">
                             <label className="block text-sm font-semibold text-gray-600 mb-2">
                                 כתובת אימייל <span className="text-red-500">*</span>
                             </label>

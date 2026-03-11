@@ -168,7 +168,7 @@ export default function AdminPanel() {
       <div className="bg-gray-200 px-6 flex gap-2 pt-4">
         <button onClick={() => setTab("images")} className={tabClass("images")}>📸 תמונות</button>
         <button onClick={() => setTab("subscribers")} className={tabClass("subscribers")}>
-          📧 מנויים {subscribers.length > 0 && <span className="mr-1 bg-primary text-white text-xs px-2 py-0.5 rounded-full">{subscribers.length}</span>}
+          📧 מנויים {subscribers.length > 0 && <span className="ms-1 bg-primary text-white text-xs px-2 py-0.5 rounded-full">{subscribers.length}</span>}
         </button>
         <button onClick={() => setTab("links")} className={tabClass("links")}>🔗 קישורים / פודקאסטים</button>
       </div>
@@ -232,10 +232,10 @@ export default function AdminPanel() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead><tr className="bg-gray-50 text-gray-600">
-                    <th className="p-3 text-right">שם</th>
-                    <th className="p-3 text-right">אימייל</th>
-                    <th className="p-3 text-right">טלפון</th>
-                    <th className="p-3 text-right">תאריך רישום</th>
+                    <th className="p-3 text-start">שם</th>
+                    <th className="p-3 text-start">אימייל</th>
+                    <th className="p-3 text-start">טלפון</th>
+                    <th className="p-3 text-start">תאריך רישום</th>
                   </tr></thead>
                   <tbody>
                     {subscribers.map(s => (

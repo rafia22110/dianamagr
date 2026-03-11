@@ -9,13 +9,13 @@ const path = require('path');
     await page.setViewportSize({ width: 1280, height: 800 });
     
     // Homepage
-    await page.goto('http://localhost:3002/', { timeout: 90000 });
+    await page.goto('http://localhost:3000/', { timeout: 90000 });
     const homePath = path.resolve('homepage_preview.png');
     await page.screenshot({ path: homePath, fullPage: true });
     console.log('✅ Homepage screenshot saved to:', homePath);
 
     // Login page
-    await page.goto('http://localhost:3002/admin/login', { timeout: 90000 });
+    await page.goto('http://localhost:3000/admin', { timeout: 90000 });
     const loginPath = path.resolve('login_preview.png');
     await page.screenshot({ path: loginPath, fullPage: true });
     console.log('✅ Login page screenshot saved to:', loginPath);
