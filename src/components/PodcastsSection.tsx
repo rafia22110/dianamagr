@@ -1,4 +1,3 @@
-import React from "react";
 import { insforge } from "@/lib/insforge";
 
 // Fallback links if DB is empty or unavailable
