@@ -35,16 +35,23 @@ export default async function HomePage() {
 
   return (
     <>
-      <nav className="bg-primary/95 sticky top-0 z-[100] py-4 px-4 shadow-xl backdrop-blur-md">
-        <ul className="flex flex-wrap justify-center gap-8 list-none text-lg">
+      <nav className="bg-primary/95 sticky top-0 z-[100] py-4 px-4 shadow-xl backdrop-blur-md flex flex-wrap justify-between items-center">
+        <ul className="flex flex-wrap items-center gap-6 list-none text-lg">
           <li><Link href="#home" className="text-white font-bold hover:text-primary-light transition-colors">בית</Link></li>
           <li><Link href="#about" className="text-white font-bold hover:text-primary-light transition-colors">אודות</Link></li>
           <li><Link href="#book" className="text-white font-bold hover:text-primary-light transition-colors">הספר</Link></li>
           <li><Link href="#podcasts" className="text-white font-bold hover:text-primary-light transition-colors">פודקאסטים</Link></li>
           <li><Link href="#gallery" className="text-white font-bold hover:text-primary-light transition-colors">גלריה</Link></li>
-          <li><Link href="#newsletter" className="text-white font-bold hover:text-primary-light transition-colors">הצטרפו</Link></li>
           <li><Link href="#lectures" className="text-white font-bold hover:text-primary-light transition-colors text-primary-light">הזמנת הרצאה</Link></li>
         </ul>
+        <div className="flex gap-4">
+          <Link href="/admin" className="text-primary-dark font-bold bg-primary-light hover:bg-white px-5 py-2 rounded-full transition-all text-sm md:text-base shadow-sm">
+            בק אופיס (ניהול)
+          </Link>
+          <Link href="#newsletter" className="text-white font-bold border-2 border-primary-light hover:bg-primary-light/20 px-5 py-2 rounded-full transition-all text-sm md:text-base">
+            הרשמה / התחברות
+          </Link>
+        </div>
       </nav>
 
       <section id="home" className="relative h-[80vh] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden">
