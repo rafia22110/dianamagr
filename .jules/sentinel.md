@@ -14,3 +14,8 @@
 **Vulnerability:** Use of `crypto.timingSafeEqual` without length validation can cause application crashes (500 errors) when provided with signatures of incorrect length.
 **Learning:** `timingSafeEqual` throws a `TypeError` if input buffers differ in length. This "fail-loudly" behavior can lead to DoS or provide a side-channel if error handling is inconsistent.
 **Prevention:** Always perform a length check (ideally on strings before buffer allocation) before calling `timingSafeEqual`.
+
+## 2026-03-12 - Authentication Timing Side-Channel
+**Vulnerability:** Implementing an artificial delay only on failed login attempts introduces a timing side-channel that reveals valid usernames/passwords.
+**Learning:** Security enhancements like brute-force mitigation must be applied symmetrically. A successful login that responds in 10ms vs a failed one in 1000ms is a clear signal for automated scanners.
+**Prevention:** Always apply artificial delays to the entire authentication flow, ensuring both success and failure paths take a similar amount of time.
