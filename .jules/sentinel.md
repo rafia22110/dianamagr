@@ -14,3 +14,8 @@
 **Vulnerability:** Use of `crypto.timingSafeEqual` without length validation can cause application crashes (500 errors) when provided with signatures of incorrect length.
 **Learning:** `timingSafeEqual` throws a `TypeError` if input buffers differ in length. This "fail-loudly" behavior can lead to DoS or provide a side-channel if error handling is inconsistent.
 **Prevention:** Always perform a length check (ideally on strings before buffer allocation) before calling `timingSafeEqual`.
+
+## 2026-03-13 - Hashing for Constant-Time Comparison
+**Vulnerability:** Comparing variable-length secrets (like passwords or usernames) using timing-safe functions directly is difficult because `timingSafeEqual` requires equal-length buffers.
+**Learning:** Directly comparing strings of different lengths still leaks length information via early return in standard comparison, and `timingSafeEqual` throws if lengths differ.
+**Prevention:** Hash both the input and the expected secret using a fixed-length algorithm (like SHA-256) before passing them to `crypto.timingSafeEqual`. This ensures equal length and protects against timing attacks on variable-length inputs.
