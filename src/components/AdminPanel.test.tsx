@@ -2,14 +2,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import AdminPanel from './AdminPanel';
 
-const { mockOrder, mockSelect, mockEq, mockDelete, mockRemove } = vi.hoisted(() => {
+const { mockOrder, mockSelect, mockDeleteImageAction, mockAddLinkAction, mockDeleteLinkAction, mockDeleteSubscriberAction } = vi.hoisted(() => {
   const mockOrder = vi.fn();
   const mockSelect = vi.fn(() => ({ order: mockOrder }));
-  const mockEq = vi.fn();
-  const mockDelete = vi.fn(() => ({ eq: mockEq }));
 
-  const mockRemove = vi.fn();
-  return { mockOrder, mockSelect, mockEq, mockDelete, mockRemove };
+  return {
+    mockOrder,
+    mockSelect,
+    mockDeleteImageAction: vi.fn(),
+    mockAddLinkAction: vi.fn(),
+    mockDeleteLinkAction: vi.fn(),
+    mockDeleteSubscriberAction: vi.fn(),
+  };
 });
 
 // Mock insforge module completely
@@ -18,25 +22,22 @@ vi.mock('@/lib/insforge', () => {
     insforge: {
       database: {
         from: vi.fn((table: string) => {
-          if (table === 'images') {
-            return {
-              select: mockSelect,
-              delete: mockDelete,
-            };
-          }
-          return {};
-        }),
-      },
-      storage: {
-        from: vi.fn((bucket: string) => {
           return {
-            remove: mockRemove,
+            select: mockSelect,
           };
         }),
       },
     },
   };
 });
+
+// Mock admin actions
+vi.mock('@/app/actions/admin', () => ({
+  deleteImageAction: mockDeleteImageAction,
+  addLinkAction: mockAddLinkAction,
+  deleteLinkAction: mockDeleteLinkAction,
+  deleteSubscriberAction: mockDeleteSubscriberAction,
+}));
 
 // Mock ImageUploadForm component
 vi.mock('./ImageUploadForm', () => {
@@ -147,8 +148,7 @@ describe("AdminPanel", () => {
 
   it("clicking delete deletes image, shows success, and refetches", async () => {
     mockOrder.mockResolvedValue({ data: mockImages, error: null });
-    mockEq.mockResolvedValue({ data: null, error: null });
-    mockRemove.mockResolvedValue({ data: null, error: null });
+    mockDeleteImageAction.mockResolvedValue({ success: true });
 
     render(<AdminPanel />);
 
@@ -162,10 +162,8 @@ describe("AdminPanel", () => {
     fireEvent.click(deleteButtons[0]);
 
     await waitFor(() => {
-      expect(mockRemove).toHaveBeenCalledTimes(1);
-      expect(mockRemove).toHaveBeenCalledWith("path/to/test1.jpg");
-      expect(mockEq).toHaveBeenCalledTimes(1);
-      expect(mockEq).toHaveBeenCalledWith("id", "1");
+      expect(mockDeleteImageAction).toHaveBeenCalledTimes(1);
+      expect(mockDeleteImageAction).toHaveBeenCalledWith("1", "path/to/test1.jpg");
       expect(screen.getByText("התמונה נמחקה")).toBeDefined();
       expect(mockOrder).toHaveBeenCalledTimes(2);
     });
