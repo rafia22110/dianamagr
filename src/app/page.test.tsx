@@ -20,7 +20,10 @@ vi.mock('@/lib/insforge', () => {
 });
 
 vi.mock('@/components/GallerySection', () => ({ default: () => <div data-testid="gallery-section" /> }));
-vi.mock('@/components/PodcastsSection', () => ({ default: () => <div data-testid="podcasts-section" /> }));
+vi.mock('@/components/PodcastsSection', () => ({
+  default: () => <div data-testid="podcasts-section" />,
+  fetchLinks: vi.fn().mockResolvedValue([])
+}));
 vi.mock('@/components/NewsletterSection', () => ({ default: () => <div data-testid="newsletter-section" /> }));
 
 describe('HomePage', () => {
