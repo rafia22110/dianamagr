@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { insforge } from "@/lib/insforge";
 import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
+import { uploadImageAction } from "@/app/actions/admin";
 
-const BUCKET = "diana-images";
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
 
 export default function ImageUploadForm({ onSuccess }: { onSuccess: () => void }) {
@@ -34,44 +33,22 @@ export default function ImageUploadForm({ onSuccess }: { onSuccess: () => void }
     setError("");
     setLoading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const key = `${category}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("category", category);
+      formData.append("altText", altText);
+      formData.append("tags", JSON.stringify(tags));
 
-      const { data: uploadData, error: uploadErr } = await insforge.storage
-        .from(BUCKET)
-        .upload(key, file);
+      const result = await uploadImageAction(formData);
 
-      if (uploadErr) {
-        setError(uploadErr.message || "שגיאה בהעלאה");
-        setLoading(false);
-        return;
+      if (result.success) {
+        setFile(null);
+        setAltText("");
+        setTags([]);
+        onSuccess();
       }
-
-      const url = uploadData?.url || "";
-      const storagePath = uploadData?.key || key;
-
-      const { error: dbErr } = await insforge.database.from("images").insert({
-        filename: file.name,
-        original_name: file.name,
-        category,
-        tags: tags,
-        alt_text: altText || null,
-        storage_path: storagePath,
-        url,
-      });
-
-      if (dbErr) {
-        setError(dbErr.message || "שגיאה בשמירה למסד");
-        setLoading(false);
-        return;
-      }
-
-      setFile(null);
-      setAltText("");
-      setTags([]);
-      onSuccess();
-    } catch (e) {
-      setError("שגיאה בהעלאת התמונה");
+    } catch (e: any) {
+      setError(e.message || "שגיאה בהעלאת התמונה");
     }
     setLoading(false);
   };

@@ -2,16 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import { insforge } from "@/lib/insforge";
-import { ImageRecord, CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
+import { ImageRecord, CATEGORIES } from "@/types/image";
 import { sanitizeUrl } from "@/lib/utils";
 import ImageUploadForm from "./ImageUploadForm";
 import { logout } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
+import {
+  deleteImageAction,
+  addLinkAction,
+  deleteLinkAction,
+  deleteSubscriberAction
+} from "@/app/actions/admin";
 
 const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL || "";
 const BUCKET = "diana-images";
 
-type Tab = "images" | "subscribers" | "links";
+type Tab = "images" | "subscribers" | "links" | "workshops" | "orders";
 
 type Subscriber = {
   id: string;
@@ -49,6 +55,12 @@ export default function AdminPanel() {
   const [newLink, setNewLink] = useState({ title: "", description: "", url: "", icon: "", type: "Video" });
   const [addingLink, setAddingLink] = useState(false);
 
+  // Workshops & Orders state
+  const [workshops, setWorkshops] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [workshopsLoading, setWorkshopsLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
   const msg = (type: "success" | "error", text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 4000);
@@ -66,8 +78,7 @@ export default function AdminPanel() {
 
   const handleDeleteImage = async (id: string, storagePath?: string) => {
     try {
-      if (storagePath) await insforge.storage.from(BUCKET).remove(storagePath);
-      await insforge.database.from("images").delete().eq("id", id);
+      await deleteImageAction(id, storagePath);
       msg("success", "התמונה נמחקה");
       fetchImages();
     } catch { msg("error", "שגיאה במחיקה"); }
@@ -99,6 +110,15 @@ export default function AdminPanel() {
     const a = document.createElement("a"); a.href = url; a.download = "subscribers.csv"; a.click();
   };
 
+  const handleDeleteSubscriber = async (id: string) => {
+    if (!confirm("האם את בטוחה שברצונך למחוק את המנוי?")) return;
+    try {
+      await deleteSubscriberAction(id);
+      msg("success", "המנוי נמחק");
+      fetchSubscribers();
+    } catch { msg("error", "שגיאה במחיקה"); }
+  };
+
   // ── Links ──
   const fetchLinks = async () => {
     setLinksLoading(true);
@@ -114,8 +134,7 @@ export default function AdminPanel() {
     if (!newLink.title || !newLink.url) return;
     setAddingLink(true);
     try {
-      const { error } = await insforge.database.from("links").insert([{ ...newLink, display_order: links.length + 1 }]);
-      if (error) throw error;
+      await addLinkAction({ ...newLink, display_order: links.length + 1 });
       msg("success", "הקישור נוסף בהצלחה!");
       setNewLink({ title: "", description: "", url: "", icon: "", type: "Video" });
       fetchLinks();
@@ -125,7 +144,7 @@ export default function AdminPanel() {
 
   const handleDeleteLink = async (id: string) => {
     try {
-      await insforge.database.from("links").delete().eq("id", id);
+      await deleteLinkAction(id);
       msg("success", "הקישור נמחק");
       fetchLinks();
     } catch { msg("error", "שגיאה במחיקה"); }
@@ -138,9 +157,29 @@ export default function AdminPanel() {
     router.refresh();
   };
 
+  const fetchWorkshops = async () => {
+    setWorkshopsLoading(true);
+    try {
+      const { data } = await insforge.database.from("workshops").select("*").order("date", { ascending: false });
+      if (data) setWorkshops(data);
+    } catch { setWorkshops([]); }
+    setWorkshopsLoading(false);
+  };
+
+  const fetchOrders = async () => {
+    setOrdersLoading(true);
+    try {
+      const { data } = await insforge.database.from("orders").select("*").order("created_at", { ascending: false });
+      if (data) setOrders(data);
+    } catch { setOrders([]); }
+    setOrdersLoading(false);
+  };
+
   useEffect(() => { fetchImages(); }, []);
   useEffect(() => { if (tab === "subscribers") fetchSubscribers(); }, [tab]);
   useEffect(() => { if (tab === "links") fetchLinks(); }, [tab]);
+  useEffect(() => { if (tab === "workshops") fetchWorkshops(); }, [tab]);
+  useEffect(() => { if (tab === "orders") fetchOrders(); }, [tab]);
 
   const tabClass = (t: Tab) =>
     `px-6 py-3 font-bold rounded-t-lg transition-all ${tab === t ? "bg-white text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`;
@@ -166,12 +205,14 @@ export default function AdminPanel() {
       </header>
 
       {/* Tabs */}
-      <div className="bg-gray-200 px-6 flex gap-2 pt-4">
+      <div className="bg-gray-200 px-6 flex gap-2 pt-4 overflow-x-auto">
         <button onClick={() => setTab("images")} className={tabClass("images")}>📸 תמונות</button>
         <button onClick={() => setTab("subscribers")} className={tabClass("subscribers")}>
           📧 מנויים {subscribers.length > 0 && <span className="ms-1 bg-primary text-white text-xs px-2 py-0.5 rounded-full">{subscribers.length}</span>}
         </button>
-        <button onClick={() => setTab("links")} className={tabClass("links")}>🔗 קישורים / פודקאסטים</button>
+        <button onClick={() => setTab("links")} className={tabClass("links")}>🔗 קישורים</button>
+        <button onClick={() => setTab("workshops")} className={tabClass("workshops")}>👩‍🍳 סדנאות</button>
+        <button onClick={() => setTab("orders")} className={tabClass("orders")}>🛍️ הזמנות</button>
       </div>
 
       <main className="max-w-6xl mx-auto p-6 space-y-6">
@@ -237,6 +278,7 @@ export default function AdminPanel() {
                     <th className="p-3 text-start">אימייל</th>
                     <th className="p-3 text-start">טלפון</th>
                     <th className="p-3 text-start">תאריך רישום</th>
+                    <th className="p-3 text-center">פעולות</th>
                   </tr></thead>
                   <tbody>
                     {subscribers.map(s => (
@@ -245,6 +287,87 @@ export default function AdminPanel() {
                         <td className="p-3 text-primary">{s.email}</td>
                         <td className="p-3">{s.phone || "—"}</td>
                         <td className="p-3 text-gray-400">{s.subscribed_at?.split("T")[0]}</td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => handleDeleteSubscriber(s.id)}
+                            className="text-red-500 hover:text-red-700"
+                            title="מחיקת מנוי"
+                          >
+                            🗑️
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── WORKSHOPS TAB ── */}
+        {tab === "workshops" && (
+          <section className="bg-white rounded-xl p-6 shadow">
+            <h2 className="text-xl font-bold text-primary mb-6">ניהול סדנאות ({workshops.length})</h2>
+            {workshopsLoading ? <p>טוען...</p> : workshops.length === 0 ? (
+              <p className="text-gray-500 text-center py-12">אין סדנאות כרגע.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-gray-50 text-gray-600">
+                    <th className="p-3 text-start">כותרת</th>
+                    <th className="p-3 text-start">תאריך</th>
+                    <th className="p-3 text-start">מחיר</th>
+                    <th className="p-3 text-start">סטטוס</th>
+                  </tr></thead>
+                  <tbody>
+                    {workshops.map(w => (
+                      <tr key={w.id} className="border-t hover:bg-gray-50">
+                        <td className="p-3 font-bold">{w.title}</td>
+                        <td className="p-3">{w.date?.split("T")[0]}</td>
+                        <td className="p-3">₪{w.price}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded text-xs ${w.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                            {w.is_active ? "פעיל" : "לא פעיל"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── ORDERS TAB ── */}
+        {tab === "orders" && (
+          <section className="bg-white rounded-xl p-6 shadow">
+            <h2 className="text-xl font-bold text-primary mb-6">הזמנות אחרונות ({orders.length})</h2>
+            {ordersLoading ? <p>טוען...</p> : orders.length === 0 ? (
+              <p className="text-gray-500 text-center py-12">אין הזמנות עדיין.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-gray-50 text-gray-600">
+                    <th className="p-3 text-start">מספר הזמנה</th>
+                    <th className="p-3 text-start">לקוח</th>
+                    <th className="p-3 text-start">סכום</th>
+                    <th className="p-3 text-start">תאריך</th>
+                    <th className="p-3 text-start">סטטוס</th>
+                  </tr></thead>
+                  <tbody>
+                    {orders.map(o => (
+                      <tr key={o.id} className="border-t hover:bg-gray-50">
+                        <td className="p-3 font-mono">{o.id.slice(0, 8)}</td>
+                        <td className="p-3">{o.customer_name}<br/><span className="text-xs text-gray-400">{o.customer_email}</span></td>
+                        <td className="p-3">₪{o.total_amount}</td>
+                        <td className="p-3">{o.created_at?.split("T")[0]}</td>
+                        <td className="p-3">
+                          <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-700">
+                            {o.status || "הושלם"}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

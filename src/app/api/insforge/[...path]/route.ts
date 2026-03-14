@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const INSFORGE_URL = "https://ane7v4ce.us-east.insforge.app";
+const INSFORGE_URL = process.env.NEXT_PUBLIC_INSFORGE_URL || "https://ane7v4ce.us-east.insforge.app";
 
 async function proxy(req: NextRequest) {
     try {
