@@ -92,7 +92,22 @@ export default function AdminPanel() {
 
   const exportCSV = () => {
     const rows = [["שם", "אימייל", "טלפון", "תאריך רישום"]];
-    subscribers.forEach(s => rows.push([s.name || "", s.email, s.phone || "", s.subscribed_at?.split("T")[0] || ""]));
+    // 🛡️ Sentinel: Escape and sanitize fields to prevent CSV Injection and handle special characters like commas.
+    const clean = (val: string) => {
+      let s = val.replace(/"/g, '""');
+      if (s.startsWith('=') || s.startsWith('+') || s.startsWith('-') || s.startsWith('@')) {
+        s = "'" + s;
+      }
+      return `"${s}"`;
+    };
+
+    subscribers.forEach(s => rows.push([
+      clean(s.name || ""),
+      clean(s.email || ""),
+      clean(s.phone || ""),
+      clean(s.subscribed_at?.split("T")[0] || "")
+    ]));
+
     const csv = rows.map(r => r.join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
