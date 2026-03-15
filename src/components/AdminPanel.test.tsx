@@ -17,15 +17,11 @@ vi.mock('@/lib/insforge', () => {
   return {
     insforge: {
       database: {
-        from: vi.fn((table: string) => {
-          if (table === 'images') {
-            return {
-              select: mockSelect,
-              delete: mockDelete,
-            };
-          }
-          return {};
-        }),
+        from: vi.fn(() => ({
+          select: mockSelect,
+          delete: mockDelete,
+          insert: vi.fn().mockResolvedValue({ error: null }),
+        })),
       },
       storage: {
         from: vi.fn((bucket: string) => {
@@ -189,5 +185,51 @@ describe("AdminPanel", () => {
       expect(screen.getByText("התמונה הועלתה!")).toBeDefined();
       expect(mockOrder).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it("exports subscribers to CSV with sanitization", async () => {
+    const mockSubscribers = [
+      { id: "1", name: "=SUM(1,2)", email: "test@example.com", phone: "123", subscribed_at: "2024-01-01T00:00:00Z" },
+      { id: "2", name: "Normal Name", email: "other@example.com", phone: "456", subscribed_at: "2024-01-02T00:00:00Z" },
+    ];
+
+    // Initial images fetch, then subscribers fetch
+    mockOrder
+      .mockResolvedValueOnce({ data: mockImages, error: null })
+      .mockResolvedValueOnce({ data: mockSubscribers, error: null });
+
+    // Mock URL and anchor click
+    const createObjectURLMock = vi.fn().mockReturnValue("blob:url");
+    global.URL.createObjectURL = createObjectURLMock;
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    // Spy on Blob to verify content
+    const blobSpy = vi.spyOn(global, 'Blob');
+
+    render(<AdminPanel />);
+
+    // Switch to subscribers tab
+    const subTabButton = screen.getByText(/מנויים/);
+    fireEvent.click(subTabButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("רשימת מנויים (2)")).toBeDefined();
+    });
+
+    const exportButton = screen.getByText("📥 ייצוא CSV");
+    fireEvent.click(exportButton);
+
+    expect(createObjectURLMock).toHaveBeenCalled();
+    expect(blobSpy).toHaveBeenCalled();
+
+    const blobContent = blobSpy.mock.calls[0][0][0] as string;
+    // Verify sanitization: BOM + Header + Rows
+    // "=SUM(1,2)" should become "'=SUM(1,2)" and be wrapped in quotes
+    expect(blobContent).toContain('\uFEFFשם,אימייל,טלפון,תאריך רישום'); // Note: the BOM is at the start
+    expect(blobContent).toContain('"' + "'=SUM(1,2)" + '"');
+    expect(blobContent).toContain('"Normal Name"');
+
+    clickSpy.mockRestore();
+    blobSpy.mockRestore();
   });
 });
