@@ -4,6 +4,7 @@ import { insforge } from '@/lib/insforge';
 const BUCKET = "diana-images";
 
 export async function GET() {
+  console.log('InsForge Client BaseURL:', (insforge as any).baseUrl);
   try {
     const { data, error } = await insforge.database
       .from("images")
