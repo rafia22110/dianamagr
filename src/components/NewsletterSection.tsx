@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { insforge } from "@/lib/insforge";
+import SocialLogin from "./SocialLogin";
 
 export default function NewsletterSection() {
     const [name, setName] = useState("");
@@ -119,6 +120,8 @@ export default function NewsletterSection() {
                         <p className="text-sm text-gray-400">
                             לא נשלח ספאם. אפשר להסיר בכל עת.
                         </p>
+
+                        <SocialLogin />
                     </form>
                 )}
             </div>

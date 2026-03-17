@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL || "";
 const BUCKET = "diana-images";
 
-type Tab = "images" | "subscribers" | "links";
+type Tab = "images" | "subscribers" | "links" | "messages";
 
 type Subscriber = {
   id: string;
@@ -29,6 +29,15 @@ type LinkRecord = {
   icon?: string;
   type?: string;
   display_order?: number;
+};
+
+type Message = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+  created_at?: string;
 };
 
 export default function AdminPanel() {
@@ -49,6 +58,10 @@ export default function AdminPanel() {
   const [newLink, setNewLink] = useState({ title: "", description: "", url: "", icon: "", type: "Video" });
   const [addingLink, setAddingLink] = useState(false);
 
+  // Messages state
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+
   const msg = (type: "success" | "error", text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 4000);
@@ -58,24 +71,34 @@ export default function AdminPanel() {
   const fetchImages = async () => {
     setImagesLoading(true);
     try {
-      const { data } = await insforge.database.from("images").select("*").order("upload_date", { ascending: false });
-      if (data) setImages(data as ImageRecord[]);
-    } catch { setImages([]); }
+      const res = await fetch('/api/images');
+      if (res.ok) {
+        const data = await res.json();
+        setImages(data.images || []);
+      }
+    } catch (e) {
+      console.warn('Error fetching images:', e);
+      setImages([]);
+    }
     setImagesLoading(false);
   };
 
   const handleDeleteImage = async (id: string, storagePath?: string) => {
     try {
-      if (storagePath) await insforge.storage.from(BUCKET).remove(storagePath);
-      await insforge.database.from("images").delete().eq("id", id);
-      msg("success", "התמונה נמחקה");
+      const url = `/api/images?id=${encodeURIComponent(id)}${storagePath ? `&storagePath=${encodeURIComponent(storagePath)}` : ''}`;
+      const res = await fetch(url, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      
+      msg("success", "התמונה נמחקה בהצלחה");
       fetchImages();
-    } catch { msg("error", "שגיאה במחיקה"); }
+    } catch (e) {
+      msg("error", "שגיאה במחיקה");
+    }
   };
 
   const copyPath = (img: ImageRecord) => {
     const path = img.storage_path || img.filename;
-    const url = `${baseUrl}/api/storage/buckets/${BUCKET}/objects/${encodeURIComponent(path)}`;
+    const url = `${window.location.origin}/api/insforge/storage/v1/object/public/${BUCKET}/${path}`;
     navigator.clipboard.writeText(url);
     msg("success", "הנתיב הועתק");
   };
@@ -97,6 +120,16 @@ export default function AdminPanel() {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "subscribers.csv"; a.click();
+  };
+
+  // ── Messages ──
+  const fetchMessages = async () => {
+    setMessagesLoading(true);
+    try {
+      const { data } = await insforge.database.from("messages").select("*").order("created_at", { ascending: false });
+      if (data) setMessages(data as Message[]);
+    } catch { setMessages([]); }
+    setMessagesLoading(false);
   };
 
   // ── Links ──
@@ -141,6 +174,7 @@ export default function AdminPanel() {
   useEffect(() => { fetchImages(); }, []);
   useEffect(() => { if (tab === "subscribers") fetchSubscribers(); }, [tab]);
   useEffect(() => { if (tab === "links") fetchLinks(); }, [tab]);
+  useEffect(() => { if (tab === "messages") fetchMessages(); }, [tab]);
 
   const tabClass = (t: Tab) =>
     `px-6 py-3 font-bold rounded-t-lg transition-all ${tab === t ? "bg-white text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`;
@@ -171,6 +205,9 @@ export default function AdminPanel() {
         <button onClick={() => setTab("subscribers")} className={tabClass("subscribers")}>
           📧 מנויים {subscribers.length > 0 && <span className="ms-1 bg-primary text-white text-xs px-2 py-0.5 rounded-full">{subscribers.length}</span>}
         </button>
+        <button onClick={() => setTab("messages")} className={tabClass("messages")}>
+          📩 פניות {messages.length > 0 && <span className="ms-1 bg-primary text-white text-xs px-2 py-0.5 rounded-full">{messages.length}</span>}
+        </button>
         <button onClick={() => setTab("links")} className={tabClass("links")}>🔗 קישורים / פודקאסטים</button>
       </div>
 
@@ -196,7 +233,8 @@ export default function AdminPanel() {
                     <div key={img.id} className="bg-white rounded-xl shadow overflow-hidden">
                       <div className="aspect-video bg-gray-200">
                         {(img.url || img.storage_path || img.filename) && (
-                          <img src={sanitizeUrl(img.url || `${baseUrl}/api/storage/buckets/${BUCKET}/objects/${encodeURIComponent(img.storage_path || img.filename)}`)}
+                          <img
+                            src={sanitizeUrl(img.storage_path ? `/api/insforge/storage/v1/object/public/${BUCKET}/${img.storage_path}` : img.url)}
                             alt={img.alt_text || ""} className="w-full h-full object-cover" />
                         )}
                       </div>
@@ -249,6 +287,38 @@ export default function AdminPanel() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── MESSAGES TAB ── */}
+        {tab === "messages" && (
+          <section className="bg-white rounded-xl p-6 shadow">
+            <h2 className="text-xl font-bold text-primary mb-6">פניות מהאתר ({messages.length})</h2>
+            {messagesLoading ? <p>טוען...</p> : messages.length === 0 ? (
+              <p className="text-gray-500 text-center py-12">אין פניות עדיין. פניות מהטופס באתר יופיעו כאן.</p>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((m) => (
+                  <div key={m.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-lg">{m.name}</h3>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        {m.created_at ? new Date(m.created_at).toLocaleString('he-IL') : ''}
+                      </span>
+                    </div>
+                    <div className="flex gap-4 text-sm text-gray-600 mb-3">
+                      <span>📧 <a href={`mailto:${m.email}`} className="text-primary hover:underline">{m.email}</a></span>
+                      {m.phone && <span>📱 <a href={`tel:${m.phone}`} className="hover:underline">{m.phone}</a></span>}
+                    </div>
+                    {m.message && (
+                      <div className="bg-gray-50 p-3 rounded text-gray-800 whitespace-pre-wrap">
+                        {m.message}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </section>

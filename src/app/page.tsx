@@ -5,6 +5,10 @@ import { sanitizeUrl } from "@/lib/utils";
 import GallerySection from "@/components/GallerySection";
 import PodcastsSection, { fetchLinks, LinkRecord } from "@/components/PodcastsSection";
 import NewsletterSection from "@/components/NewsletterSection";
+import ContactForm from "@/components/ContactForm";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function HomePage() {
   let heroImage: ImageRecord | null = null;
@@ -21,11 +25,23 @@ export default async function HomePage() {
       fetchLinks(),
     ]);
 
-    if (heroRes.data) heroImage = heroRes.data as ImageRecord;
-    if (bookRes.data) bookCover = bookRes.data as ImageRecord;
+    if (heroRes.data) {
+      const img = heroRes.data as ImageRecord;
+      heroImage = {
+        ...img,
+        url: (img.storage_path ? `/api/insforge/storage/v1/object/public/diana-images/${img.storage_path}` : img.url) || ""
+      };
+    }
+    if (bookRes.data) {
+      const img = bookRes.data as ImageRecord;
+      bookCover = {
+        ...img,
+        url: (img.storage_path ? `/api/insforge/storage/v1/object/public/diana-images/${img.storage_path}` : img.url) || ""
+      };
+    }
     if (galleryRes.data) galleryImages = (galleryRes.data as ImageRecord[]).map((img) => ({
       ...img,
-      url: img.url || (img.storage_path ? `${baseUrl}/api/storage/buckets/diana-images/objects/${encodeURIComponent(img.storage_path)}` : undefined),
+      url: (img.storage_path ? `/api/insforge/storage/v1/object/public/diana-images/${img.storage_path}` : img.url) || "",
     }));
     links = linksRes;
   } catch (e) {
@@ -174,15 +190,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <form className="space-y-4">
-              <input type="text" placeholder="שם מלא" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
-              <input type="email" placeholder="אימייל" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
-              <input type="tel" placeholder="טלפון" className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50" />
-              <textarea placeholder="סוג האירוע והודעה" rows={4} className="w-full bg-white/10 border border-white/20 p-4 rounded-xl focus:bg-white/20 outline-none transition-all placeholder:text-white/50"></textarea>
-              <button type="submit" className="w-full bg-primary-light hover:bg-white hover:text-primary py-4 rounded-xl font-bold text-xl transition-all shadow-2xl">
-                שלחי בקשה להזמנה
-              </button>
-            </form>
+            <ContactForm />
           </div>
         </div>
       </section>

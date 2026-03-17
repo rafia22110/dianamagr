@@ -34,34 +34,21 @@ export default function ImageUploadForm({ onSuccess }: { onSuccess: () => void }
     setError("");
     setLoading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const key = `${category}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', category);
+      formData.append('altText', altText);
+      formData.append('tags', JSON.stringify(tags));
 
-      const { data: uploadData, error: uploadErr } = await insforge.storage
-        .from(BUCKET)
-        .upload(key, file);
-
-      if (uploadErr) {
-        setError(uploadErr.message || "שגיאה בהעלאה");
-        setLoading(false);
-        return;
-      }
-
-      const url = uploadData?.url || "";
-      const storagePath = uploadData?.key || key;
-
-      const { error: dbErr } = await insforge.database.from("images").insert({
-        filename: file.name,
-        original_name: file.name,
-        category,
-        tags: tags,
-        alt_text: altText || null,
-        storage_path: storagePath,
-        url,
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
       });
 
-      if (dbErr) {
-        setError(dbErr.message || "שגיאה בשמירה למסד");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "שגיאה בהעלאת התמונה");
         setLoading(false);
         return;
       }
@@ -71,7 +58,7 @@ export default function ImageUploadForm({ onSuccess }: { onSuccess: () => void }
       setTags([]);
       onSuccess();
     } catch (e) {
-      setError("שגיאה בהעלאת התמונה");
+      setError("שגיאה בתקשורת מול השרת");
     }
     setLoading(false);
   };
