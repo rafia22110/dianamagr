@@ -24,3 +24,8 @@
 **Vulnerability:** The `/api/insforge` route was an unauthenticated pass-through proxy to the backend, allowing anyone to bypass frontend administrative checks and perform database operations (DELETE, POST, etc.) directly.
 **Learning:** Even if the UI is protected, any public proxy or API endpoint must also enforce authorization if it exposes sensitive backend capabilities. Substring matching for public paths (e.g., `path.includes('subscribers')`) is dangerous as it can be easily bypassed.
 **Prevention:** Implement session-based authorization at the proxy level. Use strict equality checks for allowed public paths and ensure backend URLs are managed through secure server-side environment variables (avoiding `NEXT_PUBLIC_` for sensitive targets).
+
+## 2026-03-14 - Unprotected Standalone API Endpoints
+**Vulnerability:** While the main backend proxy (`/api/insforge`) was protected, standalone endpoints like `/api/images` and `/api/upload` were created without authentication checks, allowing unauthorized database modifications and file uploads.
+**Learning:** Security must be applied consistently across all endpoints. It is easy to overlook protection when adding new "utility" routes outside of a centralized proxy or middleware.
+**Prevention:** Centralize authentication logic in a shared helper (e.g., `ensureAdmin`) and apply it to all administrative routes. Implement defense-in-depth for sensitive operations like file uploads by validating both MIME types and file extensions on the server.

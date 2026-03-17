@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { insforge } from '@/lib/insforge';
+import { ensureAdmin } from '@/lib/auth-utils';
 
 const BUCKET = "diana-images";
 
 export async function GET() {
+  const authError = await ensureAdmin();
+  if (authError) return authError;
+
   console.log('InsForge Client BaseURL:', (insforge as any).baseUrl);
   try {
     const { data, error } = await insforge.database
@@ -22,6 +26,9 @@ export async function GET() {
 }
 
 export async function DELETE(request: Request) {
+  const authError = await ensureAdmin();
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
