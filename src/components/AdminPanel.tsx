@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord, CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
 import { sanitizeUrl } from "@/lib/utils";
+import { convertToCSV } from "@/lib/csv-utils";
 import ImageUploadForm from "./ImageUploadForm";
 import { logout } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
@@ -116,7 +117,7 @@ export default function AdminPanel() {
   const exportCSV = () => {
     const rows = [["שם", "אימייל", "טלפון", "תאריך רישום"]];
     subscribers.forEach(s => rows.push([s.name || "", s.email, s.phone || "", s.subscribed_at?.split("T")[0] || ""]));
-    const csv = rows.map(r => r.join(",")).join("\n");
+    const csv = convertToCSV(rows);
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "subscribers.csv"; a.click();
