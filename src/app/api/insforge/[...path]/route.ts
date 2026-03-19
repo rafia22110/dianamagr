@@ -7,17 +7,21 @@ const INSFORGE_URL = process.env.INSFORGE_URL || "https://ane7v4ce.us-east.insfo
 async function proxy(req: NextRequest) {
     try {
         const url = new URL(req.url);
-        const pathSegments = url.pathname.replace('/api/insforge', '');
+        // Replace current proxy path with target API prefix
+        const pathSegments = url.pathname.replace('/api/insforge', '/api');
 
         // 🛡️ Sentinel: Authorization Logic
-        // Allow public newsletter signup (POST to subscribers), auth operations, and OPTIONS preflights.
-        // For all other operations (including database reads/writes), require a valid admin session.
-        // We check for the specific endpoint path to prevent unauthorized access to other internal paths.
-        const isPublicSignup = req.method === 'POST' && (pathSegments === '/subscribers' || pathSegments === '/subscribers/');
-        const isAuth = pathSegments.startsWith('/auth/v1/');
+        // Allow:
+        // 1. Public newsletter signup (POST to subscribers)
+        // 2. Public storage access (GET to public buckets)
+        // 3. Auth operations (signing in, etc)
+        // 4. Preflight OPTIONS requests
+        const isPublicSignup = req.method === 'POST' && (pathSegments.includes('/subscribers') || pathSegments.includes('/api/subscribers'));
+        const isPublicStorage = req.method === 'GET' && pathSegments.includes('/storage/v1/object/public/');
+        const isAuth = pathSegments.startsWith('/auth/v1/') || pathSegments.startsWith('/api/auth/v1/');
         const isOptions = req.method === 'OPTIONS';
 
-        if (!isPublicSignup && !isAuth && !isOptions) {
+        if (!isPublicSignup && !isPublicStorage && !isAuth && !isOptions) {
             const cookieStore = await cookies();
             const sessionCookie = cookieStore.get("admin_session")?.value;
             const isAdmin = await verifyCookie(sessionCookie);
