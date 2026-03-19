@@ -21,7 +21,7 @@ export default function GallerySection({ images }: { images: ImageRecord[] }) {
                 className="flex-none w-[300px] md:w-[450px] aspect-[4/3] relative rounded-3xl overflow-hidden snap-center shadow-xl group/item"
               >
                 <img
-                  src={sanitizeUrl(img.storage_path ? `/api/insforge/storage/buckets/diana-images/objects/${img.storage_path}` : img.url)}
+                  src={sanitizeUrl(img.storage_path ? `/api/insforge/api/storage/buckets/diana-images/objects/${img.storage_path}` : img.url)}
                   alt={img.alt_text || "דיאנה רחמני"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110"
                 />

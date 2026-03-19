@@ -7,8 +7,10 @@ const INSFORGE_URL = process.env.INSFORGE_URL || "https://ane7v4ce.us-east.insfo
 async function proxy(req: NextRequest) {
     try {
         const url = new URL(req.url);
-        // Replace current proxy path with target API prefix
-        const pathSegments = url.pathname.replace('/api/insforge', '/api');
+        // 🔄 Fix: Map /api/insforge to the ROOT of the backend URL.
+        // This ensures /api/insforge/rest/v1 maps to Backend/rest/v1
+        // and /api/insforge/api/storage maps to Backend/api/storage.
+        const pathSegments = url.pathname.replace('/api/insforge', '');
 
         // 🛡️ Sentinel: Authorization Logic
         // Allow:
@@ -16,8 +18,15 @@ async function proxy(req: NextRequest) {
         // 2. Public storage access (GET to public buckets)
         // 3. Auth operations (signing in, etc)
         // 4. Preflight OPTIONS requests
-        const isPublicSignup = req.method === 'POST' && (pathSegments.includes('/subscribers') || pathSegments.includes('/api/subscribers'));
-        const isPublicStorage = req.method === 'GET' && (pathSegments.includes('/storage/v1/object/public/') || pathSegments.startsWith('/api/storage/'));
+        const isPublicSignup = req.method === 'POST' && (
+            pathSegments.includes('/subscribers') || 
+            pathSegments.includes('/rest/v1/subscribers')
+        );
+        const isPublicStorage = req.method === 'GET' && (
+            pathSegments.includes('/storage/v1/object/public/') || 
+            pathSegments.startsWith('/api/storage/') ||
+            pathSegments.startsWith('/storage/')
+        );
         const isAuth = pathSegments.startsWith('/auth/v1/') || pathSegments.startsWith('/api/auth/v1/');
         const isOptions = req.method === 'OPTIONS';
 

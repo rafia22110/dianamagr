@@ -99,7 +99,7 @@ export default function AdminPanel() {
 
   const copyPath = (img: ImageRecord) => {
     const path = img.storage_path || img.filename;
-    const url = `${window.location.origin}/api/insforge/storage/buckets/${BUCKET}/objects/${path}`;
+    const url = `${window.location.origin}/api/insforge/api/storage/buckets/${BUCKET}/objects/${path}`;
     navigator.clipboard.writeText(url);
     msg("success", "הנתיב הועתק");
   };
@@ -235,7 +235,7 @@ export default function AdminPanel() {
                       <div className="aspect-video bg-gray-200">
                         {(img.url || img.storage_path || img.filename) && (
                           <img
-                            src={sanitizeUrl(img.storage_path ? `/api/insforge/storage/buckets/${BUCKET}/objects/${img.storage_path}` : img.url)}
+                            src={sanitizeUrl(img.storage_path ? `/api/insforge/api/storage/buckets/${BUCKET}/objects/${img.storage_path}` : img.url)}
                             alt={img.alt_text || ""} className="w-full h-full object-cover" />
                         )}
                       </div>
