@@ -17,7 +17,7 @@ async function proxy(req: NextRequest) {
         // 3. Auth operations (signing in, etc)
         // 4. Preflight OPTIONS requests
         const isPublicSignup = req.method === 'POST' && (pathSegments.includes('/subscribers') || pathSegments.includes('/api/subscribers'));
-        const isPublicStorage = req.method === 'GET' && pathSegments.includes('/storage/v1/object/public/');
+        const isPublicStorage = req.method === 'GET' && (pathSegments.includes('/storage/v1/object/public/') || pathSegments.startsWith('/api/storage/'));
         const isAuth = pathSegments.startsWith('/auth/v1/') || pathSegments.startsWith('/api/auth/v1/');
         const isOptions = req.method === 'OPTIONS';
 
