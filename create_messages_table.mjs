@@ -1,6 +1,11 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-const API = 'https://diana-residence.vercel.app/api/insforge';
-const KEY = 'ik_bf44df2031c6d8808e0d4cff27b52575';
+const API = process.env.INSFORGE_URL || 'https://diana-residence.vercel.app/api/insforge';
+const KEY = process.env.INSFORGE_API_KEY;
+
+if (!KEY) {
+  console.error("❌ Error: INSFORGE_API_KEY is not set in environment variables.");
+  process.exit(1);
+}
+
 const H = { 
     'Authorization': `Bearer ${KEY}`,
     'apikey': KEY,

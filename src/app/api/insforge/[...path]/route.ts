@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyCookie } from '@/app/actions/auth';
 
-const INSFORGE_URL = process.env.INSFORGE_URL || "https://ane7v4ce.us-east.insforge.app";
+const INSFORGE_URL = process.env.INSFORGE_URL || (process.env.NODE_ENV === 'production' ? '' : "https://ane7v4ce.us-east.insforge.app");
 
 async function proxy(req: NextRequest) {
+    if (!INSFORGE_URL) {
+        return new NextResponse(JSON.stringify({ error: "InsForge URL not configured" }), { status: 500 });
+    }
     try {
         const url = new URL(req.url);
         const pathSegments = url.pathname.replace('/api/insforge', '');

@@ -16,12 +16,15 @@ export async function GET() {
       .order("upload_date", { ascending: false });
     
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Database Select Error:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
     
     return NextResponse.json({ images: data });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // 🛡️ Sentinel: Sanitize error messages to avoid leaking internals.
+    console.error('Fetch Images Error:', error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -45,11 +48,14 @@ export async function DELETE(request: Request) {
     const { error } = await insforge.database.from("images").delete().eq("id", id);
     
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Database Delete Error:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // 🛡️ Sentinel: Sanitize error messages to avoid leaking internals.
+    console.error('Delete Image Error:', error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
