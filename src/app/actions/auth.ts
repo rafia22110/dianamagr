@@ -5,10 +5,15 @@ import crypto from "crypto";
 
 const ADMIN_USER = process.env.ADMIN_USERNAME || (process.env.NODE_ENV === "production" ? undefined : "admin");
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === "production" ? undefined : "admin123");
-const SECRET_KEY = process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? undefined : "diana_secret_key_123456789");
+const DEFAULT_SECRET = "diana_secret_key_123456789";
+
+function getSecretKey() {
+  return process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? undefined : DEFAULT_SECRET);
+}
 
 function checkAdminConfig() {
-  if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
+  const secretKey = getSecretKey();
+  if (!ADMIN_USER || !ADMIN_PASS || !secretKey) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("Missing required administrative credentials in production (ADMIN_USERNAME, ADMIN_PASSWORD, or SESSION_SECRET).");
     } else {
@@ -19,21 +24,26 @@ function checkAdminConfig() {
 
 function signCookie(value: string) {
   checkAdminConfig();
-  const hmac = crypto.createHmac("sha256", SECRET_KEY!);
-  hmac.update(value);
-  return `${value}.${hmac.digest("hex")}`;
+  const secretKey = getSecretKey();
+  // 🛡️ Sentinel: Include an expiration timestamp (24 hours from now) in the signed payload.
+  const expires = Date.now() + 60 * 60 * 24 * 1000;
+  const payload = `${value}:${expires}`;
+  const hmac = crypto.createHmac("sha256", secretKey!);
+  hmac.update(payload);
+  return `${payload}.${hmac.digest("hex")}`;
 }
 
 export async function verifyCookie(cookieValue: string | undefined): Promise<boolean> {
-  if (!cookieValue || !SECRET_KEY) return false;
+  const secretKey = getSecretKey();
+  if (!cookieValue || !secretKey) return false;
   const parts = cookieValue.split(".");
   if (parts.length !== 2) return false;
 
-  const [value, signature] = parts;
-  const expectedSignature = crypto.createHmac("sha256", SECRET_KEY).update(value).digest("hex");
+  const [payload, signature] = parts;
+  const expectedSignature = crypto.createHmac("sha256", secretKey).update(payload).digest("hex");
 
   // 🛡️ Sentinel: timingSafeEqual requires buffers of the same length to avoid throwing.
-  // We check string lengths first to avoid unnecessary Buffer allocations.
+  // We check string lengths first to avoid unnecessary Buffer allocations and unhandled exceptions (DoS).
   if (signature.length !== expectedSignature.length) {
     return false;
   }
@@ -41,7 +51,22 @@ export async function verifyCookie(cookieValue: string | undefined): Promise<boo
   const signatureBuffer = Buffer.from(signature);
   const expectedBuffer = Buffer.from(expectedSignature);
 
-  return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+  const isSignatureValid = crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+  if (!isSignatureValid) return false;
+
+  // 🛡️ Sentinel: Verify the expiration timestamp embedded in the payload.
+  // We use lastIndexOf(':') to robustly handle session IDs that might contain colons.
+  const lastColonIndex = payload.lastIndexOf(":");
+  if (lastColonIndex === -1) return false;
+
+  const expiresStr = payload.substring(lastColonIndex + 1);
+  const expires = parseInt(expiresStr, 10);
+
+  if (isNaN(expires) || Date.now() > expires) {
+    return false;
+  }
+
+  return true;
 }
 
 export async function login(formData: FormData) {
