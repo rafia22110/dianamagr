@@ -29,14 +29,15 @@ export async function POST(request: Request) {
 
     const tags = tagsJson ? JSON.parse(tagsJson) : [];
     
-    const key = `${category}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const key = `${category}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
 
     const { data: uploadData, error: uploadErr } = await insforge.storage
       .from(BUCKET)
       .upload(key, file);
 
     if (uploadErr) {
-      return NextResponse.json({ error: uploadErr.message || 'Error uploading file' }, { status: 500 });
+      console.error('Storage Upload Error:', uploadErr);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 
     const url = uploadData?.url || "";
@@ -53,11 +54,14 @@ export async function POST(request: Request) {
     });
 
     if (dbErr) {
-      return NextResponse.json({ error: dbErr.message || 'Error inserting into database' }, { status: 500 });
+      console.error('Database Insert Error:', dbErr);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, url });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // 🛡️ Sentinel: Sanitize error messages to avoid leaking internals.
+    console.error('Upload Error:', error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
