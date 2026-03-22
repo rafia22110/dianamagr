@@ -93,8 +93,9 @@ describe('NewsletterSection', () => {
   it('handles errors during submission by showing an error message', async () => {
     const originalError = console.error;
     console.error = vi.fn(); // Mute console.error for this test
+    const dbError = { message: 'Some database error' };
 
-    mockInsert.mockResolvedValue({ error: { message: 'Some database error' } });
+    mockInsert.mockResolvedValue({ error: dbError });
 
     render(<NewsletterSection />);
 
@@ -107,6 +108,7 @@ describe('NewsletterSection', () => {
     await waitFor(() => {
       expect(mockInsert).toHaveBeenCalledTimes(1);
       expect(screen.getByText('אירעה שגיאה. נסו שוב בעוד רגע.')).toBeDefined();
+      expect(console.error).toHaveBeenCalledWith(dbError);
     });
 
     console.error = originalError;
@@ -115,8 +117,9 @@ describe('NewsletterSection', () => {
   it('handles unexpected exceptions during submission', async () => {
     const originalError = console.error;
     console.error = vi.fn(); // Mute console.error for this test
+    const networkError = new Error('Network error');
 
-    mockInsert.mockRejectedValue(new Error('Network error'));
+    mockInsert.mockRejectedValue(networkError);
 
     render(<NewsletterSection />);
 
@@ -129,6 +132,7 @@ describe('NewsletterSection', () => {
     await waitFor(() => {
       expect(mockInsert).toHaveBeenCalledTimes(1);
       expect(screen.getByText('אירעה שגיאה. נסו שוב בעוד רגע.')).toBeDefined();
+      expect(console.error).toHaveBeenCalledWith(networkError);
     });
 
     console.error = originalError;
