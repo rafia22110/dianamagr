@@ -17,32 +17,32 @@ export default async function HomePage() {
   let links: LinkRecord[] = [];
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL;
-    const [heroRes, bookRes, galleryRes, linksRes] = await Promise.all([
-      insforge.database.from("images").select("*").eq("category", "hero").limit(1).maybeSingle(),
-      insforge.database.from("images").select("*").eq("category", "book").limit(1).maybeSingle(),
-      insforge.database.from("images").select("*").eq("category", "gallery").order("upload_date", { ascending: false }).limit(24),
+    const [imagesRes, linksRes] = await Promise.all([
+      insforge.database
+        .from("images")
+        .select("*")
+        .in("category", ["hero", "book", "gallery"])
+        .order("upload_date", { ascending: false })
+        .limit(100),
       fetchLinks(),
     ]);
 
-    if (heroRes.data) {
-      const img = heroRes.data as ImageRecord;
-      heroImage = {
+    const allImages = (imagesRes.data || []) as ImageRecord[];
+
+    allImages.forEach(img => {
+      const processed = {
         ...img,
         url: (img.storage_path ? `/api/insforge/storage/v1/object/public/diana-images/${img.storage_path}` : img.url) || ""
       };
-    }
-    if (bookRes.data) {
-      const img = bookRes.data as ImageRecord;
-      bookCover = {
-        ...img,
-        url: (img.storage_path ? `/api/insforge/storage/v1/object/public/diana-images/${img.storage_path}` : img.url) || ""
-      };
-    }
-    if (galleryRes.data) galleryImages = (galleryRes.data as ImageRecord[]).map((img) => ({
-      ...img,
-      url: (img.storage_path ? `/api/insforge/storage/v1/object/public/diana-images/${img.storage_path}` : img.url) || "",
-    }));
+      if (img.category === "hero" && !heroImage) {
+        heroImage = processed;
+      } else if (img.category === "book" && !bookCover) {
+        bookCover = processed;
+      } else if (img.category === "gallery" && galleryImages.length < 24) {
+        galleryImages.push(processed);
+      }
+    });
+
     links = linksRes;
   } catch (e) {
     console.warn("InsForge fetch warning:", e);

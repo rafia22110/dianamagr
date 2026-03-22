@@ -9,8 +9,9 @@ vi.mock('@/lib/insforge', () => {
   const order = vi.fn().mockReturnThis();
   const limit = vi.fn().mockReturnThis();
   const eq = vi.fn().mockReturnThis();
+  const _in = vi.fn().mockReturnThis();
   const select = vi.fn().mockReturnThis();
-  const from = vi.fn().mockReturnValue({ select, eq, limit, maybeSingle, order });
+  const from = vi.fn().mockReturnValue({ select, eq, in: _in, limit, maybeSingle, order });
 
   return {
     insforge: {
@@ -41,10 +42,11 @@ describe('HomePage', () => {
 
     const mockChain = {
       select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockRejectedValue(mockError)
+      // In the new logic, we await the chain directly (or use then)
+      then: (onSuccess: any, onError: any) => Promise.reject(mockError).catch(onError)
     };
 
     (insforge.database.from as any).mockReturnValue(mockChain);
