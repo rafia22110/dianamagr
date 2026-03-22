@@ -44,7 +44,7 @@ async function proxy(req: NextRequest) {
             method: req.method,
             headers: headers,
             body: body,
-            // @ts-ignore
+            // @ts-expect-error duplex is required by Node.js for streaming requests with a body, but it is not currently in the TypeScript RequestInit definition.
             duplex: isBodyReq ? 'half' : undefined,
         });
 
