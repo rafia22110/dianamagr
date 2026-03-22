@@ -55,7 +55,7 @@ async function proxy(req: NextRequest) {
             status: response.status,
             headers: respHeaders,
         });
-    } catch (err: any) {
+    } catch (err: unknown) {
         // 🛡️ Sentinel: Sanitize error messages to avoid leaking internals.
         console.error('Proxy Error:', err);
         return new NextResponse(JSON.stringify({ error: "Internal Server Error" }), {
