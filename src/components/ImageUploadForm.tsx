@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { insforge } from "@/lib/insforge";
 import { CATEGORIES, AVAILABLE_TAGS } from "@/types/image";
 
 const BUCKET = "diana-images";
