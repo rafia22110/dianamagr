@@ -2,8 +2,9 @@ import Link from "next/link";
 import { insforge } from "@/lib/insforge";
 import { ImageRecord } from "@/types/image";
 import { sanitizeUrl } from "@/lib/utils";
+import { LinkRecord } from "@/types/admin";
 import GallerySection from "@/components/GallerySection";
-import PodcastsSection, { fetchLinks, LinkRecord } from "@/components/PodcastsSection";
+import PodcastsSection, { fetchLinks } from "@/components/PodcastsSection";
 import NewsletterSection from "@/components/NewsletterSection";
 import ContactForm from "@/components/ContactForm";
 

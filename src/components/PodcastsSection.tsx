@@ -1,5 +1,6 @@
 import { insforge } from "@/lib/insforge";
 import { sanitizeUrl } from "@/lib/utils";
+import { LinkRecord } from "@/types/admin";
 
 // Fallback links if DB is empty or unavailable
 const FALLBACK_LINKS = [
@@ -91,16 +92,6 @@ const FALLBACK_LINKS = [
     display_order: 10,
   }
 ];
-
-export type LinkRecord = {
-  id: string;
-  title: string;
-  description?: string;
-  url: string;
-  icon?: string;
-  type?: string;
-  display_order?: number;
-};
 
 export async function fetchLinks(): Promise<LinkRecord[]> {
   try {
