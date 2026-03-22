@@ -8,7 +8,8 @@ const ADMIN_PASS = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === "prod
 const SECRET_KEY = process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? undefined : "diana_secret_key_123456789");
 
 function checkAdminConfig() {
-  if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
+  const isMissingConfig = !process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD || !process.env.SESSION_SECRET;
+  if (isMissingConfig) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("Missing required administrative credentials in production (ADMIN_USERNAME, ADMIN_PASSWORD, or SESSION_SECRET).");
     } else {
