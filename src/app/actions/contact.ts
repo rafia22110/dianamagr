@@ -23,7 +23,7 @@ export async function submitContact(formData: FormData) {
       return { success: false, error: "אירעה שגיאה בשליחת הטופס." };
     }
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Submit Error:", err);
     return { success: false, error: "שגיאת רשת. נסו שוב." };
   }
