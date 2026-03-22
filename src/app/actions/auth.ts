@@ -3,17 +3,13 @@
 import { cookies } from "next/headers";
 import crypto from "crypto";
 
-const ADMIN_USER = process.env.ADMIN_USERNAME || (process.env.NODE_ENV === "production" ? undefined : "admin");
-const ADMIN_PASS = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === "production" ? undefined : "admin123");
-const SECRET_KEY = process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? undefined : "diana_secret_key_123456789");
+const ADMIN_USER = process.env.ADMIN_USERNAME;
+const ADMIN_PASS = process.env.ADMIN_PASSWORD;
+const SECRET_KEY = process.env.SESSION_SECRET;
 
 function checkAdminConfig() {
   if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("Missing required administrative credentials in production (ADMIN_USERNAME, ADMIN_PASSWORD, or SESSION_SECRET).");
-    } else {
-      console.warn("⚠️ Using default administrative credentials for development.");
-    }
+    throw new Error("Missing required administrative credentials (ADMIN_USERNAME, ADMIN_PASSWORD, or SESSION_SECRET).");
   }
 }
 
