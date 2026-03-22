@@ -3,8 +3,13 @@ import { insforge } from '@/lib/insforge';
 import { ensureAdmin } from '@/lib/auth-utils';
 
 const BUCKET = "diana-images";
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
+const MIME_MAP: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
 
 export async function POST(request: Request) {
   const authError = await ensureAdmin();
@@ -21,9 +26,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // 🛡️ Sentinel: Server-side MIME type and extension validation to prevent malicious uploads.
-    const ext = file.name.split(".").pop()?.toLowerCase() || "";
-    if (!ALLOWED_TYPES.includes(file.type) || !ALLOWED_EXTENSIONS.includes(ext)) {
+    // 🛡️ Sentinel: Server-side validation. Force the extension based on the verified MIME type.
+    const ext = MIME_MAP[file.type];
+    if (!ext) {
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
     }
 
