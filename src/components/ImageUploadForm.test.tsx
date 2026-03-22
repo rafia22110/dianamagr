@@ -3,29 +3,9 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
 import ImageUploadForm from './ImageUploadForm';
 
-const { mockUpload, mockInsert } = vi.hoisted(() => {
-  const mockUpload = vi.fn();
-  const mockInsert = vi.fn();
-  return { mockUpload, mockInsert };
-});
-
-// Mock insforge module completely
-vi.mock('@/lib/insforge', () => {
-  return {
-    insforge: {
-      storage: {
-        from: vi.fn((bucket: string) => ({
-          upload: mockUpload,
-        })),
-      },
-      database: {
-        from: vi.fn((table: string) => ({
-          insert: mockInsert,
-        })),
-      },
-    },
-  };
-});
+// Mock global fetch
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
 describe('ImageUploadForm', () => {
   const mockOnSuccess = vi.fn();
@@ -59,8 +39,7 @@ describe('ImageUploadForm', () => {
       expect(errorDiv).toBeDefined();
       expect(errorDiv?.textContent).toBe('בחרי תמונה');
     });
-    expect(mockUpload).not.toHaveBeenCalled();
-    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it('shows error when submitting with invalid file type', async () => {
@@ -80,8 +59,7 @@ describe('ImageUploadForm', () => {
     await waitFor(() => {
       expect(screen.getByText('פורמט לא נתמך. העלי JPG, PNG, GIF או WEBP')).toBeDefined();
     });
-    expect(mockUpload).not.toHaveBeenCalled();
-    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it('toggles tags correctly', () => {
@@ -102,8 +80,10 @@ describe('ImageUploadForm', () => {
   });
 
   it('successfully uploads a file and calls onSuccess', async () => {
-    mockUpload.mockResolvedValue({ data: { url: 'http://example.com/test.jpg', key: 'gallery/test.jpg' }, error: null });
-    mockInsert.mockResolvedValue({ data: null, error: null });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    });
 
     const { container } = render(<ImageUploadForm onSuccess={mockOnSuccess} />);
 
@@ -130,31 +110,25 @@ describe('ImageUploadForm', () => {
     expect(screen.getByRole('button', { name: /מעלה.../i })).toBeDefined();
 
     await waitFor(() => {
-      expect(mockUpload).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
-    expect(mockUpload.mock.calls[0][0]).toMatch(/^book\/\d+_[a-z0-9-]+\.jpg$/);
-    expect(mockUpload.mock.calls[0][1]).toBe(file);
-
-    await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledTimes(1);
-    });
-
-    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-      filename: 'test.jpg',
-      original_name: 'test.jpg',
-      category: 'book',
-      tags: ['דיאנה רחמני'],
-      alt_text: 'My alt text',
-      storage_path: 'gallery/test.jpg', // Mocked return value for key
-      url: 'http://example.com/test.jpg'
-    }));
+    const fetchArgs = mockFetch.mock.calls[0];
+    expect(fetchArgs[0]).toBe('/api/upload');
+    expect(fetchArgs[1].method).toBe('POST');
+    const formData = fetchArgs[1].body as FormData;
+    expect(formData.get('category')).toBe('book');
+    expect(formData.get('altText')).toBe('My alt text');
+    expect(JSON.parse(formData.get('tags') as string)).toContain('דיאנה רחמני');
 
     expect(mockOnSuccess).toHaveBeenCalledTimes(1);
   });
 
   it('shows error message if upload fails', async () => {
-    mockUpload.mockResolvedValue({ data: null, error: { message: 'Upload failed for some reason' } });
+    mockFetch.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'Upload failed for some reason' }),
+    });
 
     const { container } = render(<ImageUploadForm onSuccess={mockOnSuccess} />);
 
@@ -172,14 +146,15 @@ describe('ImageUploadForm', () => {
       expect(screen.getByText('Upload failed for some reason')).toBeDefined();
     });
 
-    expect(mockUpload).toHaveBeenCalledTimes(1);
-    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(mockOnSuccess).not.toHaveBeenCalled();
   });
 
-  it('shows error message if database insert fails', async () => {
-    mockUpload.mockResolvedValue({ data: { url: 'http://example.com/test.png', key: 'gallery/test.png' }, error: null });
-    mockInsert.mockResolvedValue({ data: null, error: { message: 'Database insert failed' } });
+  it('shows error message if server returns error', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'Server error' }),
+    });
 
     const { container } = render(<ImageUploadForm onSuccess={mockOnSuccess} />);
 
@@ -194,11 +169,10 @@ describe('ImageUploadForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /העלה תמונה/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Database insert failed')).toBeDefined();
+      expect(screen.getByText('Server error')).toBeDefined();
     });
 
-    expect(mockUpload).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(mockOnSuccess).not.toHaveBeenCalled();
   });
 });

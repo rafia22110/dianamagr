@@ -56,6 +56,10 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock global fetch
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
 import { insforge } from '@/lib/insforge';
 
 const mockImages = [
@@ -86,7 +90,10 @@ describe("AdminPanel", () => {
   });
 
   it("renders successfully and fetches images", async () => {
-    mockOrder.mockResolvedValue({ data: mockImages, error: null });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ images: mockImages }),
+    });
 
     render(<AdminPanel />);
 
@@ -103,7 +110,7 @@ describe("AdminPanel", () => {
   });
 
   it("handles error during image fetch", async () => {
-    mockOrder.mockResolvedValue({ data: null, error: { message: "error" } });
+    mockFetch.mockRejectedValue(new Error("fetch failed"));
 
     // Mute console.warn for this test
     const originalWarn = console.warn;
@@ -122,7 +129,10 @@ describe("AdminPanel", () => {
   });
 
   it("clicking copy path copies to clipboard and shows success message", async () => {
-    mockOrder.mockResolvedValue({ data: mockImages, error: null });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ images: mockImages }),
+    });
 
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, {
@@ -141,14 +151,15 @@ describe("AdminPanel", () => {
     fireEvent.click(copyButtons[0]);
 
     expect(writeTextMock).toHaveBeenCalledTimes(1);
-    expect(writeTextMock.mock.calls[0][0]).toContain("path%2Fto%2Ftest1.jpg");
+    expect(writeTextMock.mock.calls[0][0]).toContain("path/to/test1.jpg");
     expect(screen.getByText("הנתיב הועתק")).toBeDefined();
   });
 
   it("clicking delete deletes image, shows success, and refetches", async () => {
-    mockOrder.mockResolvedValue({ data: mockImages, error: null });
-    mockEq.mockResolvedValue({ data: null, error: null });
-    mockRemove.mockResolvedValue({ data: null, error: null });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ images: mockImages }),
+    });
 
     render(<AdminPanel />);
 
@@ -156,23 +167,29 @@ describe("AdminPanel", () => {
       expect(screen.getByText("Original 1")).toBeDefined();
     });
 
-    expect(mockOrder).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    mockFetch.mockResolvedValueOnce({ ok: true }); // Delete call
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ images: mockImages }),
+    }); // Refetch call
 
     const deleteButtons = screen.getAllByText("מחק");
     fireEvent.click(deleteButtons[0]);
 
     await waitFor(() => {
-      expect(mockRemove).toHaveBeenCalledTimes(1);
-      expect(mockRemove).toHaveBeenCalledWith("path/to/test1.jpg");
-      expect(mockEq).toHaveBeenCalledTimes(1);
-      expect(mockEq).toHaveBeenCalledWith("id", "1");
-      expect(screen.getByText("התמונה נמחקה")).toBeDefined();
-      expect(mockOrder).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/api/images?id=1"), expect.anything());
+      expect(screen.getByText("התמונה נמחקה בהצלחה")).toBeDefined();
+      expect(mockFetch).toHaveBeenCalledTimes(3);
     });
   });
 
   it("upload success shows message and refetches", async () => {
-    mockOrder.mockResolvedValue({ data: mockImages, error: null });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ images: mockImages }),
+    });
 
     render(<AdminPanel />);
 
@@ -180,14 +197,14 @@ describe("AdminPanel", () => {
       expect(screen.getByText("Original 1")).toBeDefined();
     });
 
-    expect(mockOrder).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
 
     const uploadSuccessButton = screen.getByTestId("mock-upload-success");
     fireEvent.click(uploadSuccessButton);
 
     await waitFor(() => {
       expect(screen.getByText("התמונה הועלתה!")).toBeDefined();
-      expect(mockOrder).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
   });
 });
