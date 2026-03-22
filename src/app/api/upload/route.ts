@@ -3,8 +3,13 @@ import { insforge } from '@/lib/insforge';
 import { ensureAdmin } from '@/lib/auth-utils';
 
 const BUCKET = "diana-images";
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
+const MIME_TYPE_TO_EXTENSION: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
 
 export async function POST(request: Request) {
   const authError = await ensureAdmin();
@@ -21,15 +26,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // 🛡️ Sentinel: Server-side MIME type and extension validation to prevent malicious uploads.
-    const ext = file.name.split(".").pop()?.toLowerCase() || "";
-    if (!ALLOWED_TYPES.includes(file.type) || !ALLOWED_EXTENSIONS.includes(ext)) {
+    // 🛡️ Sentinel: Server-side validation using the verified MIME type to determine the file extension.
+    const ext = MIME_TYPE_TO_EXTENSION[file.type];
+    if (!ext) {
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
     }
 
     const tags = tagsJson ? JSON.parse(tagsJson) : [];
     
-    const key = `${category}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const key = `${category}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
 
     const { data: uploadData, error: uploadErr } = await insforge.storage
       .from(BUCKET)
