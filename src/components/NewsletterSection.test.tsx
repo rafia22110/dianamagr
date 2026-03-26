@@ -3,26 +3,11 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
 import NewsletterSection from './NewsletterSection';
 
-const { mockInsert } = vi.hoisted(() => {
-  return { mockInsert: vi.fn() };
+const { mockFetch } = vi.hoisted(() => {
+  return { mockFetch: vi.fn() };
 });
 
-vi.mock('@/lib/insforge', () => {
-  return {
-    insforge: {
-      database: {
-        from: vi.fn((table: string) => {
-          if (table === 'subscribers') {
-            return {
-              insert: mockInsert,
-            };
-          }
-          return {};
-        }),
-      },
-    },
-  };
-});
+vi.stubGlobal('fetch', mockFetch);
 
 describe('NewsletterSection', () => {
   beforeEach(() => {
@@ -42,7 +27,10 @@ describe('NewsletterSection', () => {
   });
 
   it('submits successfully and shows success message', async () => {
-    mockInsert.mockResolvedValue({ error: null });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, message: 'נרשמתם בהצלחה! נשלח לכם עדכונים חמים 🎉' }),
+    });
 
     render(<NewsletterSection />);
 
@@ -60,21 +48,20 @@ describe('NewsletterSection', () => {
     expect(screen.getByRole('button', { name: /רושמים אותך/i })).toBeDefined();
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledTimes(1);
-      expect(mockInsert).toHaveBeenCalledWith([
-        {
-          name: 'Test User',
-          email: 'test@example.com',
-          phone: '0501234567',
-          subscribed_at: expect.any(String),
-        },
-      ]);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledWith('/api/newsletter', expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ name: 'Test User', email: 'test@example.com', phone: '0501234567' }),
+      }));
       expect(screen.getByText('נרשמתם בהצלחה! נשלח לכם עדכונים חמים 🎉')).toBeDefined();
     });
   });
 
-  it('handles duplicate submission by showing already subscribed message', async () => {
-    mockInsert.mockResolvedValue({ error: { message: 'duplicate key value violates unique constraint' } });
+  it('handles already subscribed response', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, message: 'כבר רשומים! תודה 😊' }),
+    });
 
     render(<NewsletterSection />);
 
@@ -85,7 +72,7 @@ describe('NewsletterSection', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(screen.getByText('כבר רשומים! תודה 😊')).toBeDefined();
     });
   });
@@ -94,7 +81,10 @@ describe('NewsletterSection', () => {
     const originalError = console.error;
     console.error = vi.fn(); // Mute console.error for this test
 
-    mockInsert.mockResolvedValue({ error: { message: 'Some database error' } });
+    mockFetch.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'Some error' }),
+    });
 
     render(<NewsletterSection />);
 
@@ -105,8 +95,8 @@ describe('NewsletterSection', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledTimes(1);
-      expect(screen.getByText('אירעה שגיאה. נסו שוב בעוד רגע.')).toBeDefined();
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(screen.getByText('Some error')).toBeDefined();
     });
 
     console.error = originalError;
@@ -116,7 +106,7 @@ describe('NewsletterSection', () => {
     const originalError = console.error;
     console.error = vi.fn(); // Mute console.error for this test
 
-    mockInsert.mockRejectedValue(new Error('Network error'));
+    mockFetch.mockRejectedValue(new Error('Network error'));
 
     render(<NewsletterSection />);
 
@@ -127,8 +117,8 @@ describe('NewsletterSection', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledTimes(1);
-      expect(screen.getByText('אירעה שגיאה. נסו שוב בעוד רגע.')).toBeDefined();
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(screen.getByText('Network error')).toBeDefined();
     });
 
     console.error = originalError;
@@ -145,8 +135,8 @@ describe('NewsletterSection', () => {
     // Wait a short tick
     await new Promise((r) => setTimeout(r, 0));
 
-    // Shouldn't have called insert
-    expect(mockInsert).not.toHaveBeenCalled();
+    // Shouldn't have called fetch
+    expect(mockFetch).not.toHaveBeenCalled();
     // Still in idle state, so submit button is present
     expect(screen.getByRole('button', { name: /הצטרפו עכשיו בחינם/i })).toBeDefined();
   });

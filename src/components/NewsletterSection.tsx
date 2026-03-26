@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { insforge } from "@/lib/insforge";
 import SocialLogin from "./SocialLogin";
 
 export default function NewsletterSection() {
@@ -17,34 +16,29 @@ export default function NewsletterSection() {
         setStatus("loading");
 
         try {
-            const { error } = await insforge.database.from("subscribers").insert([
-                {
-                    name,
-                    email,
-                    phone,
-                    subscribed_at: new Date().toISOString(),
+            const res = await fetch("/api/newsletter", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-            ]);
+                body: JSON.stringify({ name, email, phone }),
+            });
 
-            if (error) {
-                // אם כבר רשום
-                if (error.message?.includes("duplicate") || error.message?.includes("unique")) {
-                    setStatus("success");
-                    setMessage("כבר רשומים! תודה 😊");
-                } else {
-                    throw error;
-                }
-            } else {
+            const data = await res.json();
+
+            if (res.ok) {
                 setStatus("success");
-                setMessage("נרשמתם בהצלחה! נשלח לכם עדכונים חמים 🎉");
+                setMessage(data.message || "נרשמתם בהצלחה! נשלח לכם עדכונים חמים 🎉");
                 setName("");
                 setEmail("");
                 setPhone("");
+            } else {
+                throw new Error(data.error || "אירעה שגיאה. נסו שוב בעוד רגע.");
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
             setStatus("error");
-            setMessage("אירעה שגיאה. נסו שוב בעוד רגע.");
+            setMessage(e.message || "אירעה שגיאה. נסו שוב בעוד רגע.");
         }
     };
 

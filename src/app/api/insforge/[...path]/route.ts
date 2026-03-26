@@ -10,13 +10,14 @@ async function proxy(req: NextRequest) {
         const pathSegments = url.pathname.replace('/api/insforge', '');
 
         // 🛡️ Sentinel: Authorization Logic
-        // Allow public newsletter signup (POST to subscribers) and OPTIONS preflights.
+        // Allow public newsletter signup (POST to subscribers), auth operations, and OPTIONS preflights.
         // For all other operations (including database reads/writes), require a valid admin session.
         // We check for the specific endpoint path to prevent unauthorized access to other internal paths.
         const isPublicSignup = req.method === 'POST' && (pathSegments === '/subscribers' || pathSegments === '/subscribers/');
+        const isAuth = pathSegments.startsWith('/auth/v1/');
         const isOptions = req.method === 'OPTIONS';
 
-        if (!isPublicSignup && !isOptions) {
+        if (!isPublicSignup && !isAuth && !isOptions) {
             const cookieStore = await cookies();
             const sessionCookie = cookieStore.get("admin_session")?.value;
             const isAdmin = await verifyCookie(sessionCookie);
