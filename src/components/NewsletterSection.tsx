@@ -63,6 +63,14 @@ export default function NewsletterSection() {
                         onSubmit={handleSubmit}
                         className="bg-white rounded-3xl shadow-2xl p-10 border border-gray-100 space-y-5"
                     >
+                        <SocialLogin />
+
+                        <div className="relative flex items-center justify-center py-4">
+                            <div className="flex-grow border-t border-gray-200"></div>
+                            <span className="flex-shrink mx-4 text-gray-400 text-sm font-medium">או</span>
+                            <div className="flex-grow border-t border-gray-200"></div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="text-start">
                                 <label className="block text-sm font-semibold text-gray-600 mb-2">שם מלא</label>
@@ -108,14 +116,12 @@ export default function NewsletterSection() {
                             disabled={status === "loading"}
                             className="w-full bg-gradient-to-r from-primary to-primary-light text-white py-5 rounded-xl font-bold text-xl hover:opacity-90 transition-all shadow-lg disabled:opacity-50"
                         >
-                            {status === "loading" ? "⏳ רושמים אותך..." : "✉️ הצטרפו עכשיו בחינם"}
+                            {status === "loading" ? "⏳ רושמים אותך..." : "✉️ הצטרפות עכשיו חינם"}
                         </button>
 
                         <p className="text-sm text-gray-400">
                             לא נשלח ספאם. אפשר להסיר בכל עת.
                         </p>
-
-                        <SocialLogin />
                     </form>
                 )}
             </div>

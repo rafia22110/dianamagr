@@ -8,15 +8,13 @@ async function proxy(req: NextRequest) {
     try {
         const url = new URL(req.url);
         // 🔄 Fix: Map /api/insforge to the ROOT of the backend URL.
-        // This ensures /api/insforge/rest/v1 maps to Backend/rest/v1
-        // and /api/insforge/api/storage maps to Backend/api/storage.
         const pathSegments = url.pathname.replace('/api/insforge', '');
 
         // 🛡️ Sentinel: Authorization Logic
         // Allow:
         // 1. Public newsletter signup (POST to subscribers)
         // 2. Public storage access (GET to public buckets)
-        // 3. Auth operations (signing in, etc)
+        // 3. Auth operations (signing in/up)
         // 4. Preflight OPTIONS requests
         const isPublicSignup = req.method === 'POST' && (
             pathSegments.includes('/subscribers') || 
@@ -27,10 +25,10 @@ async function proxy(req: NextRequest) {
             pathSegments.startsWith('/api/storage/') ||
             pathSegments.startsWith('/storage/')
         );
-        const isAuth = pathSegments.startsWith('/auth/v1/') || pathSegments.startsWith('/api/auth/v1/');
+        const isAuthRequest = pathSegments.startsWith('/auth/v1/') || pathSegments.startsWith('/api/auth/v1/');
         const isOptions = req.method === 'OPTIONS';
 
-        if (!isPublicSignup && !isPublicStorage && !isAuth && !isOptions) {
+        if (!isPublicSignup && !isPublicStorage && !isAuthRequest && !isOptions) {
             const cookieStore = await cookies();
             const sessionCookie = cookieStore.get("admin_session")?.value;
             const isAdmin = await verifyCookie(sessionCookie);
@@ -52,7 +50,14 @@ async function proxy(req: NextRequest) {
         headers.set('origin', INSFORGE_URL);
 
         const isBodyReq = req.method !== 'GET' && req.method !== 'HEAD';
-        const body = isBodyReq ? await req.arrayBuffer() : undefined;
+        let body: ArrayBuffer | undefined = undefined;
+        if (isBodyReq) {
+            try {
+                body = await req.arrayBuffer();
+            } catch (e) {
+                // Ignore if no body
+            }
+        }
 
         const response = await fetch(targetUrl, {
             method: req.method,
@@ -70,7 +75,6 @@ async function proxy(req: NextRequest) {
             headers: respHeaders,
         });
     } catch (err: any) {
-        // 🛡️ Sentinel: Sanitize error messages to avoid leaking internals.
         console.error('Proxy Error:', err);
         return new NextResponse(JSON.stringify({ error: "Internal Server Error" }), {
             status: 500,

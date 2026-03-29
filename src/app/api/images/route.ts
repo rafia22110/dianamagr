@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { insforge } from '@/lib/insforge';
-import { ensureAdmin } from '@/lib/auth-utils';
+import { verifyCookie } from '@/app/actions/auth';
 
 const BUCKET = "diana-images";
 
 export async function GET() {
-  const authError = await ensureAdmin();
-  if (authError) return authError;
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("admin_session")?.value;
+  const isAdmin = await verifyCookie(sessionCookie);
 
-  console.log('InsForge Client BaseURL:', (insforge as any).baseUrl);
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { data, error } = await insforge.database
       .from("images")
@@ -26,8 +31,13 @@ export async function GET() {
 }
 
 export async function DELETE(request: Request) {
-  const authError = await ensureAdmin();
-  if (authError) return authError;
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("admin_session")?.value;
+  const isAdmin = await verifyCookie(sessionCookie);
+
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     const { searchParams } = new URL(request.url);

@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { insforge } from '@/lib/insforge';
-import { ensureAdmin } from '@/lib/auth-utils';
+import { verifyCookie } from '@/app/actions/auth';
 
 const BUCKET = "diana-images";
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
 const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 export async function POST(request: Request) {
-  const authError = await ensureAdmin();
-  if (authError) return authError;
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("admin_session")?.value;
+  const isAdmin = await verifyCookie(sessionCookie);
+
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     const formData = await request.formData();
@@ -39,8 +45,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: uploadErr.message || 'Error uploading file' }, { status: 500 });
     }
 
-    const url = uploadData?.url || "";
-    const storagePath = uploadData?.key || key;
+    const url = (uploadData as any)?.url || "";
+    const storagePath = (uploadData as any)?.key || key;
 
     const { error: dbErr } = await insforge.database.from("images").insert({
       filename: file.name,

@@ -18,6 +18,17 @@ export default function LoginPage() {
            </p>
 
            <SocialLogin />
+            <div className="relative flex items-center justify-center py-4">
+                <div className="flex-grow border-t border-gray-200"></div>
+                <span className="flex-shrink mx-4 text-gray-400 text-sm font-medium">או</span>
+                <div className="flex-grow border-t border-gray-200"></div>
+            </div>
+            <Link 
+              href="/#newsletter" 
+              className="w-full block text-center bg-gradient-to-r from-primary to-primary-light text-white py-5 rounded-xl font-bold text-xl hover:opacity-90 transition-all shadow-lg"
+            >
+              ✉️ הצטרפות עכשיו חינם
+            </Link>
 
            <div className="text-center pt-4">
               <Link href="/" className="text-primary-light hover:underline font-bold text-sm">חזרה לאתר הראשי</Link>

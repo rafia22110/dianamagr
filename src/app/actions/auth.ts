@@ -28,62 +28,75 @@ export async function verifyCookie(cookieValue: string | undefined): Promise<boo
   const parts = cookieValue.split(".");
   if (parts.length !== 2) return false;
 
-  const [value, signature] = parts;
-  const expectedSignature = crypto.createHmac("sha256", SECRET_KEY).update(value).digest("hex");
+  const [accessToken, signature] = parts;
+  const expectedSignature = crypto.createHmac("sha256", SECRET_KEY).update(accessToken).digest("hex");
 
   if (signature.length !== expectedSignature.length) {
     return false;
   }
 
-  const signatureBuffer = Buffer.from(signature);
-  const expectedBuffer = Buffer.from(expectedSignature);
+  const isSignatureValid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
+  if (!isSignatureValid) return false;
 
-  return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+  // Now, verify the ACTUAL token with InsForge to ensure it hasn't expired or been revoked.
+  try {
+    // We use a hack to set the token for this request since we are on the server
+    // and using a singleton client.
+    (insforge.auth as any).tokenManager.setAccessToken(accessToken);
+    const { data, error } = await insforge.auth.getCurrentUser();
+    
+    if (error || !data?.user) {
+      console.warn("Invalid session token detected in verifyCookie:", error);
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    console.error("Token Verification Error:", err);
+    return false;
+  }
 }
 
 export async function login(formData: FormData) {
-  checkAdminConfig();
-
-  const emailRaw = formData.get("username"); // Using "username" field as email
+  const usernameRaw = formData.get("username"); // Using "username" field as email
   const passwordRaw = formData.get("password");
 
-  const email = typeof emailRaw === "string" ? emailRaw : "";
+  const email = typeof usernameRaw === "string" ? usernameRaw : "";
   const password = typeof passwordRaw === "string" ? passwordRaw : "";
 
-  // 🛡️ Sentinel: Always wait for 1000ms to eliminate timing side-channels
-  // and slow down brute-force attempts.
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  // 🛡️ Sentinel: Always wait for 500ms to eliminate timing side-channels
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   try {
     const { data, error } = await insforge.auth.signInWithPassword({
-        email,
-        password
+      email,
+      password,
     });
 
-    if (error || !data.user) {
-        console.error("Login Auth Error:", error);
-        return { success: false, error: "שם משתמש או סיסמה שגויים" };
+    if (error || !data) {
+      console.error("Login Auth Error:", error);
+      return { success: false, error: "שם משתמש או סיסמה שגויים" };
     }
 
-    // Check if the user has an 'admin' metadata or is a specific email if needed.
-    // For now, any successful login to this backend via password is considered admin
-    // as it's the back-office login. In a real app, check user.user_metadata.role === 'admin'
+    const accessToken = (data as any).accessToken || (data as any).session?.access_token;
 
-    const cookieStore = await cookies();
-    const sessionId = data.session?.access_token || crypto.randomUUID();
-    const signedValue = signCookie(sessionId);
+    if (accessToken) {
+      const cookieStore = await cookies();
+      const signedValue = signCookie(accessToken);
 
-    cookieStore.set("admin_session", signedValue, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24, // 1 day
-    });
-    return { success: true };
-  } catch (err) {
-      console.error("Login Exception:", err);
-      return { success: false, error: "אירעה שגיאה בכניסה למערכת" };
+      cookieStore.set("admin_session", signedValue, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24, // 1 day
+      });
+      return { success: true };
+    }
+
+    return { success: false, error: "שגיאה לא צפויה בתהליך ההתחברות" };
+  } catch (err: any) {
+    console.error("Login Error:", err);
+    return { success: false, error: "אירעה שגיאה בחיבור לשרת" };
   }
 }
 
