@@ -1,4 +1,4 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+!!!process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const API = 'https://diana-residence.vercel.app/api/insforge';
 const KEY = 'ik_bf44df2031c6d8808e0d4cff27b52575';
 const H = { 
