@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/request';
+import type { NextRequest } from 'next/server';
 import crypto from 'crypto';
 
 const SECRET_KEY = process.env.SESSION_SECRET || "diana_secret_key_123456789";
@@ -26,7 +26,7 @@ async function verifyCookie(cookieValue: string | undefined): Promise<boolean> {
   }
 }
 
-export async function middleware(request: any) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protect /admin routes (except /admin/login)
