@@ -2,17 +2,16 @@
 
 import { cookies } from "next/headers";
 import crypto from "crypto";
+import { insforge } from "@/lib/insforge";
 
-const ADMIN_USER = process.env.ADMIN_USERNAME || (process.env.NODE_ENV === "production" ? undefined : "admin");
-const ADMIN_PASS = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === "production" ? undefined : "admin123");
 const SECRET_KEY = process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? undefined : "diana_secret_key_123456789");
 
 function checkAdminConfig() {
-  if (!ADMIN_USER || !ADMIN_PASS || !SECRET_KEY) {
+  if (!SECRET_KEY) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("Missing required administrative credentials in production (ADMIN_USERNAME, ADMIN_PASSWORD, or SESSION_SECRET).");
+      throw new Error("Missing SESSION_SECRET environment variable in production.");
     } else {
-      console.warn("⚠️ Using default administrative credentials for development.");
+      console.warn("⚠️ Using default SESSION_SECRET for development.");
     }
   }
 }
@@ -32,8 +31,6 @@ export async function verifyCookie(cookieValue: string | undefined): Promise<boo
   const [value, signature] = parts;
   const expectedSignature = crypto.createHmac("sha256", SECRET_KEY).update(value).digest("hex");
 
-  // 🛡️ Sentinel: timingSafeEqual requires buffers of the same length to avoid throwing.
-  // We check string lengths first to avoid unnecessary Buffer allocations.
   if (signature.length !== expectedSignature.length) {
     return false;
   }
@@ -47,46 +44,51 @@ export async function verifyCookie(cookieValue: string | undefined): Promise<boo
 export async function login(formData: FormData) {
   checkAdminConfig();
 
-  const usernameRaw = formData.get("username");
+  const emailRaw = formData.get("username"); // Using "username" field as email
   const passwordRaw = formData.get("password");
 
-  // 🛡️ Sentinel: Input validation to ensure we only process strings.
-  const username = typeof usernameRaw === "string" ? usernameRaw : "";
+  const email = typeof emailRaw === "string" ? emailRaw : "";
   const password = typeof passwordRaw === "string" ? passwordRaw : "";
-
-  // 🛡️ Sentinel: Use constant-time comparison to prevent timing attacks.
-  // We hash both values to ensure they have the same length for timingSafeEqual.
-  const userHash = crypto.createHash("sha256").update(username).digest();
-  const passHash = crypto.createHash("sha256").update(password).digest();
-  const expectedUserHash = crypto.createHash("sha256").update(ADMIN_USER!).digest();
-  const expectedPassHash = crypto.createHash("sha256").update(ADMIN_PASS!).digest();
-
-  const isUserValid = crypto.timingSafeEqual(userHash, expectedUserHash);
-  const isPassValid = crypto.timingSafeEqual(passHash, expectedPassHash);
 
   // 🛡️ Sentinel: Always wait for 1000ms to eliminate timing side-channels
   // and slow down brute-force attempts.
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  if (isUserValid && isPassValid) {
+  try {
+    const { data, error } = await insforge.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if (error || !data.user) {
+        console.error("Login Auth Error:", error);
+        return { success: false, error: "שם משתמש או סיסמה שגויים" };
+    }
+
+    // Check if the user has an 'admin' metadata or is a specific email if needed.
+    // For now, any successful login to this backend via password is considered admin
+    // as it's the back-office login. In a real app, check user.user_metadata.role === 'admin'
+
     const cookieStore = await cookies();
-    const sessionId = crypto.randomUUID(); // create a random session id
+    const sessionId = data.session?.access_token || crypto.randomUUID();
     const signedValue = signCookie(sessionId);
 
     cookieStore.set("admin_session", signedValue, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // 🛡️ Sentinel: Defense-in-depth against CSRF.
+      sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24, // 1 day
     });
     return { success: true };
+  } catch (err) {
+      console.error("Login Exception:", err);
+      return { success: false, error: "אירעה שגיאה בכניסה למערכת" };
   }
-
-  return { success: false, error: "שם משתמש או סיסמה שגויים" };
 }
 
 export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete("admin_session");
+  await insforge.auth.signOut();
 }

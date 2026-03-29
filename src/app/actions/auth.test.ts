@@ -2,9 +2,27 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { logout, login } from './auth';
 import { cookies } from 'next/headers';
 
+const { mockSignInWithPassword, mockSignOut } = vi.hoisted(() => {
+  return {
+    mockSignInWithPassword: vi.fn(),
+    mockSignOut: vi.fn(),
+  };
+});
+
 vi.mock('next/headers', () => {
   return {
     cookies: vi.fn(),
+  };
+});
+
+vi.mock('@/lib/insforge', () => {
+  return {
+    insforge: {
+      auth: {
+        signInWithPassword: mockSignInWithPassword,
+        signOut: mockSignOut,
+      },
+    },
   };
 });
 
@@ -28,6 +46,7 @@ describe('auth actions', () => {
 
       expect(cookies).toHaveBeenCalled();
       expect(deleteMock).toHaveBeenCalledWith('admin_session');
+      expect(mockSignOut).toHaveBeenCalled();
     });
   });
 
@@ -35,10 +54,14 @@ describe('auth actions', () => {
     it('should return success true and set cookie for valid credentials', async () => {
       const setMock = vi.fn();
       vi.mocked(cookies).mockResolvedValue({ set: setMock } as any);
+      mockSignInWithPassword.mockResolvedValue({
+        data: { user: { id: '123' }, session: { access_token: 'token' } },
+        error: null,
+      });
 
       const formData = new FormData();
-      formData.append('username', 'admin');
-      formData.append('password', 'admin123');
+      formData.append('username', 'admin@example.com');
+      formData.append('password', 'password123');
 
       const loginPromise = login(formData);
 
@@ -58,9 +81,14 @@ describe('auth actions', () => {
       );
     });
 
-    it('should return failure for incorrect password', async () => {
+    it('should return failure for incorrect password or auth error', async () => {
+      mockSignInWithPassword.mockResolvedValue({
+        data: { user: null, session: null },
+        error: { message: 'Invalid credentials' },
+      });
+
       const formData = new FormData();
-      formData.append('username', 'admin');
+      formData.append('username', 'admin@example.com');
       formData.append('password', 'wrongpassword');
 
       const loginPromise = login(formData);
@@ -73,55 +101,8 @@ describe('auth actions', () => {
       });
     });
 
-    it('should return failure for incorrect username', async () => {
-      const formData = new FormData();
-      formData.append('username', 'wronguser');
-      formData.append('password', 'admin123');
-
-      const loginPromise = login(formData);
-      await vi.advanceTimersByTimeAsync(1000);
-      const result = await loginPromise;
-
-      expect(result).toEqual({
-        success: false,
-        error: "שם משתמש או סיסמה שגויים"
-      });
-    });
-
-    it('should handle missing fields by treating them as empty strings', async () => {
-      const formData = new FormData();
-      // Not appending username or password
-
-      const loginPromise = login(formData);
-      await vi.advanceTimersByTimeAsync(1000);
-      const result = await loginPromise;
-
-      expect(result).toEqual({
-        success: false,
-        error: "שם משתמש או סיסמה שגויים"
-      });
-    });
-
-    it('should handle non-string fields by treating them as empty strings', async () => {
-      const formData = new FormData();
-      const blob = new Blob(['content'], { type: 'text/plain' });
-      formData.append('username', blob, 'test.txt');
-      formData.append('password', 'admin123');
-
-      const loginPromise = login(formData);
-      await vi.advanceTimersByTimeAsync(1000);
-      const result = await loginPromise;
-
-      expect(result).toEqual({
-        success: false,
-        error: "שם משתמש או סיסמה שגויים"
-      });
-    });
-
-    it('should throw error in production if admin config is missing', async () => {
+    it('should throw error in production if SESSION_SECRET is missing', async () => {
       vi.stubEnv('NODE_ENV', 'production');
-      vi.stubEnv('ADMIN_USERNAME', '');
-      vi.stubEnv('ADMIN_PASSWORD', '');
       vi.stubEnv('SESSION_SECRET', '');
 
       vi.resetModules();
@@ -129,7 +110,7 @@ describe('auth actions', () => {
       const { login: loginProd } = await import('./auth');
 
       const formData = new FormData();
-      await expect(loginProd(formData)).rejects.toThrow(/Missing required administrative credentials in production/);
+      await expect(loginProd(formData)).rejects.toThrow(/Missing SESSION_SECRET environment variable in production/);
     });
   });
 });
